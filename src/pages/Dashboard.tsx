@@ -1,4 +1,6 @@
 import { useLMS } from "@/context/LMSContext";
+import { useAuth } from "@/context/AuthContext";
+import { useSemester } from "@/context/SemesterContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BookOpen, Megaphone, MessageSquare, GraduationCap, Clock } from "lucide-react";
 import { format } from "date-fns";
@@ -6,6 +8,8 @@ import { Link } from "react-router-dom";
 
 export default function Dashboard() {
   const { topics, announcements, discussions, assignments, grades } = useLMS();
+  const { user } = useAuth();
+  const { activeSemester } = useSemester();
 
   const totalAssignments = assignments.length;
   const totalGrades = grades.length;
@@ -30,7 +34,7 @@ export default function Dashboard() {
     <div className="max-w-5xl mx-auto space-y-8">
       <div>
         <h1 className="font-display text-2xl font-bold">Dashboard</h1>
-        <p className="text-muted-foreground text-sm mt-1">Welcome back — here's your course overview.</p>
+        <p className="text-muted-foreground text-sm mt-1">Welcome back, {user?.name} — {activeSemester.name} overview.</p>
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useLMS, type ContentItem } from "@/context/LMSContext";
+import { useAuth } from "@/context/AuthContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,6 +25,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 
 export default function Topics() {
   const { topics, addTopic, addContentToTopic, removeContentFromTopic } = useLMS();
+  const { isAdmin } = useAuth();
   const [newTitle, setNewTitle] = useState("");
   const [newDesc, setNewDesc] = useState("");
   const [topicDialogOpen, setTopicDialogOpen] = useState(false);
@@ -73,19 +75,21 @@ export default function Topics() {
           <h1 className="font-display text-2xl font-bold">Topics</h1>
           <p className="text-sm text-muted-foreground mt-1">Browse course topics and materials.</p>
         </div>
-        <Dialog open={topicDialogOpen} onOpenChange={setTopicDialogOpen}>
-          <DialogTrigger asChild>
-            <Button size="sm"><Plus className="h-4 w-4 mr-1" /> Add Topic</Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader><DialogTitle>New Topic</DialogTitle></DialogHeader>
-            <div className="space-y-3">
-              <Input placeholder="Topic title" value={newTitle} onChange={(e) => setNewTitle(e.target.value)} />
-              <Textarea placeholder="Description" value={newDesc} onChange={(e) => setNewDesc(e.target.value)} />
-              <Button onClick={handleAddTopic} className="w-full">Create Topic</Button>
-            </div>
-          </DialogContent>
-        </Dialog>
+        {isAdmin && (
+          <Dialog open={topicDialogOpen} onOpenChange={setTopicDialogOpen}>
+            <DialogTrigger asChild>
+              <Button size="sm"><Plus className="h-4 w-4 mr-1" /> Add Topic</Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader><DialogTitle>New Topic</DialogTitle></DialogHeader>
+              <div className="space-y-3">
+                <Input placeholder="Topic title" value={newTitle} onChange={(e) => setNewTitle(e.target.value)} />
+                <Textarea placeholder="Description" value={newDesc} onChange={(e) => setNewDesc(e.target.value)} />
+                <Button onClick={handleAddTopic} className="w-full">Create Topic</Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+        )}
       </div>
 
       {topics.length === 0 ? (
@@ -124,42 +128,46 @@ export default function Topics() {
                             <TooltipContent>Open link</TooltipContent>
                           </Tooltip>
                         )}
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => removeContentFromTopic(topic.id, c.id)}>
-                              <Trash2 className="h-3 w-3" />
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>Delete content</TooltipContent>
-                        </Tooltip>
+                        {isAdmin && (
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => removeContentFromTopic(topic.id, c.id)}>
+                                <Trash2 className="h-3 w-3" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>Delete content</TooltipContent>
+                          </Tooltip>
+                        )}
                       </div>
                     </div>
                   ))}
-                  <Dialog open={contentDialogOpen === topic.id} onOpenChange={(o) => setContentDialogOpen(o ? topic.id : null)}>
-                    <DialogTrigger asChild>
-                      <Button variant="outline" size="sm" className="mt-2"><Plus className="h-3 w-3 mr-1" /> Add Content</Button>
-                    </DialogTrigger>
-                    <DialogContent>
-                      <DialogHeader><DialogTitle>Add Content to {topic.title}</DialogTitle></DialogHeader>
-                      <div className="space-y-3">
-                        <Select value={contentType} onValueChange={(v) => setContentType(v as ContentItem["type"])}>
-                          <SelectTrigger><SelectValue /></SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="link">Link</SelectItem>
-                            <SelectItem value="pdf">PDF</SelectItem>
-                            <SelectItem value="image">Image</SelectItem>
-                            <SelectItem value="text">Text Note</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <Input placeholder="Title" value={contentTitle} onChange={(e) => setContentTitle(e.target.value)} />
-                        {(contentType === "link" || contentType === "pdf" || contentType === "image") && (
-                          <Input placeholder="URL" value={contentUrl} onChange={(e) => setContentUrl(e.target.value)} />
-                        )}
-                        <Textarea placeholder="Description (optional)" value={contentDesc} onChange={(e) => setContentDesc(e.target.value)} />
-                        <Button onClick={() => handleAddContent(topic.id)} className="w-full">Add Content</Button>
-                      </div>
-                    </DialogContent>
-                  </Dialog>
+                  {isAdmin && (
+                    <Dialog open={contentDialogOpen === topic.id} onOpenChange={(o) => setContentDialogOpen(o ? topic.id : null)}>
+                      <DialogTrigger asChild>
+                        <Button variant="outline" size="sm" className="mt-2"><Plus className="h-3 w-3 mr-1" /> Add Content</Button>
+                      </DialogTrigger>
+                      <DialogContent>
+                        <DialogHeader><DialogTitle>Add Content to {topic.title}</DialogTitle></DialogHeader>
+                        <div className="space-y-3">
+                          <Select value={contentType} onValueChange={(v) => setContentType(v as ContentItem["type"])}>
+                            <SelectTrigger><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="link">Link</SelectItem>
+                              <SelectItem value="pdf">PDF</SelectItem>
+                              <SelectItem value="image">Image</SelectItem>
+                              <SelectItem value="text">Text Note</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <Input placeholder="Title" value={contentTitle} onChange={(e) => setContentTitle(e.target.value)} />
+                          {(contentType === "link" || contentType === "pdf" || contentType === "image") && (
+                            <Input placeholder="URL" value={contentUrl} onChange={(e) => setContentUrl(e.target.value)} />
+                          )}
+                          <Textarea placeholder="Description (optional)" value={contentDesc} onChange={(e) => setContentDesc(e.target.value)} />
+                          <Button onClick={() => handleAddContent(topic.id)} className="w-full">Add Content</Button>
+                        </div>
+                      </DialogContent>
+                    </Dialog>
+                  )}
                 </div>
               </AccordionContent>
             </AccordionItem>
