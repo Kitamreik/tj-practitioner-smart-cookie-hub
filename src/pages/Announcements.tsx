@@ -44,7 +44,7 @@ export default function Announcements() {
           <h1 className="font-display text-2xl font-bold">Announcements</h1>
           <p className="text-sm text-muted-foreground mt-1">Stay up to date with course news.</p>
         </div>
-        <Button size="sm" onClick={openNew}><Plus className="h-4 w-4 mr-1" /> New Announcement</Button>
+        {isAdmin && <Button size="sm" onClick={openNew}><Plus className="h-4 w-4 mr-1" /> New Announcement</Button>}
       </div>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
