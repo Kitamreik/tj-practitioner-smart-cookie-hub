@@ -34,7 +34,8 @@ export default function Dashboard() {
     <div className="max-w-5xl mx-auto space-y-8">
       <div>
         <h1 className="font-display text-2xl font-bold">Dashboard</h1>
-        <p className="text-muted-foreground text-sm mt-1">Welcome back — here's your course overview.</p>
+        <p className="text-muted-foreground text-sm mt-1">Welcome back, {user?.name} — {activeSemester.name} overview.</p>
+      </div>
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
