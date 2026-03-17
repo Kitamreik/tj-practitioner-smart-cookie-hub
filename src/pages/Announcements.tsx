@@ -14,6 +14,7 @@ import { format } from "date-fns";
 
 export default function Announcements() {
   const { announcements, addAnnouncement, updateAnnouncement, deleteAnnouncement } = useLMS();
+  const { isAdmin } = useAuth();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
   const [title, setTitle] = useState("");
