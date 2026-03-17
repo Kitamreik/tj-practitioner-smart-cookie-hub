@@ -36,7 +36,6 @@ export default function Dashboard() {
         <h1 className="font-display text-2xl font-bold">Dashboard</h1>
         <p className="text-muted-foreground text-sm mt-1">Welcome back, {user?.name} — {activeSemester.name} overview.</p>
       </div>
-      </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {stats.map((s) => (
