@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useLMS, type ContentItem } from "@/context/LMSContext";
+import { useAuth } from "@/context/AuthContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
