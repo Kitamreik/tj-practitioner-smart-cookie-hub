@@ -128,14 +128,16 @@ export default function Topics() {
                             <TooltipContent>Open link</TooltipContent>
                           </Tooltip>
                         )}
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => removeContentFromTopic(topic.id, c.id)}>
-                              <Trash2 className="h-3 w-3" />
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>Delete content</TooltipContent>
-                        </Tooltip>
+                        {isAdmin && (
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => removeContentFromTopic(topic.id, c.id)}>
+                                <Trash2 className="h-3 w-3" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>Delete content</TooltipContent>
+                          </Tooltip>
+                        )}
                       </div>
                     </div>
                   ))}
