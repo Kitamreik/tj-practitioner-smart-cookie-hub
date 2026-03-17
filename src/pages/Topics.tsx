@@ -25,6 +25,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 
 export default function Topics() {
   const { topics, addTopic, addContentToTopic, removeContentFromTopic } = useLMS();
+  const { isAdmin } = useAuth();
   const [newTitle, setNewTitle] = useState("");
   const [newDesc, setNewDesc] = useState("");
   const [topicDialogOpen, setTopicDialogOpen] = useState(false);
