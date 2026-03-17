@@ -141,31 +141,33 @@ export default function Topics() {
                       </div>
                     </div>
                   ))}
-                  <Dialog open={contentDialogOpen === topic.id} onOpenChange={(o) => setContentDialogOpen(o ? topic.id : null)}>
-                    <DialogTrigger asChild>
-                      <Button variant="outline" size="sm" className="mt-2"><Plus className="h-3 w-3 mr-1" /> Add Content</Button>
-                    </DialogTrigger>
-                    <DialogContent>
-                      <DialogHeader><DialogTitle>Add Content to {topic.title}</DialogTitle></DialogHeader>
-                      <div className="space-y-3">
-                        <Select value={contentType} onValueChange={(v) => setContentType(v as ContentItem["type"])}>
-                          <SelectTrigger><SelectValue /></SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="link">Link</SelectItem>
-                            <SelectItem value="pdf">PDF</SelectItem>
-                            <SelectItem value="image">Image</SelectItem>
-                            <SelectItem value="text">Text Note</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <Input placeholder="Title" value={contentTitle} onChange={(e) => setContentTitle(e.target.value)} />
-                        {(contentType === "link" || contentType === "pdf" || contentType === "image") && (
-                          <Input placeholder="URL" value={contentUrl} onChange={(e) => setContentUrl(e.target.value)} />
-                        )}
-                        <Textarea placeholder="Description (optional)" value={contentDesc} onChange={(e) => setContentDesc(e.target.value)} />
-                        <Button onClick={() => handleAddContent(topic.id)} className="w-full">Add Content</Button>
-                      </div>
-                    </DialogContent>
-                  </Dialog>
+                  {isAdmin && (
+                    <Dialog open={contentDialogOpen === topic.id} onOpenChange={(o) => setContentDialogOpen(o ? topic.id : null)}>
+                      <DialogTrigger asChild>
+                        <Button variant="outline" size="sm" className="mt-2"><Plus className="h-3 w-3 mr-1" /> Add Content</Button>
+                      </DialogTrigger>
+                      <DialogContent>
+                        <DialogHeader><DialogTitle>Add Content to {topic.title}</DialogTitle></DialogHeader>
+                        <div className="space-y-3">
+                          <Select value={contentType} onValueChange={(v) => setContentType(v as ContentItem["type"])}>
+                            <SelectTrigger><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="link">Link</SelectItem>
+                              <SelectItem value="pdf">PDF</SelectItem>
+                              <SelectItem value="image">Image</SelectItem>
+                              <SelectItem value="text">Text Note</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <Input placeholder="Title" value={contentTitle} onChange={(e) => setContentTitle(e.target.value)} />
+                          {(contentType === "link" || contentType === "pdf" || contentType === "image") && (
+                            <Input placeholder="URL" value={contentUrl} onChange={(e) => setContentUrl(e.target.value)} />
+                          )}
+                          <Textarea placeholder="Description (optional)" value={contentDesc} onChange={(e) => setContentDesc(e.target.value)} />
+                          <Button onClick={() => handleAddContent(topic.id)} className="w-full">Add Content</Button>
+                        </div>
+                      </DialogContent>
+                    </Dialog>
+                  )}
                 </div>
               </AccordionContent>
             </AccordionItem>
