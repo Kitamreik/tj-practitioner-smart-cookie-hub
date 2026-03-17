@@ -75,19 +75,21 @@ export default function Topics() {
           <h1 className="font-display text-2xl font-bold">Topics</h1>
           <p className="text-sm text-muted-foreground mt-1">Browse course topics and materials.</p>
         </div>
-        <Dialog open={topicDialogOpen} onOpenChange={setTopicDialogOpen}>
-          <DialogTrigger asChild>
-            <Button size="sm"><Plus className="h-4 w-4 mr-1" /> Add Topic</Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader><DialogTitle>New Topic</DialogTitle></DialogHeader>
-            <div className="space-y-3">
-              <Input placeholder="Topic title" value={newTitle} onChange={(e) => setNewTitle(e.target.value)} />
-              <Textarea placeholder="Description" value={newDesc} onChange={(e) => setNewDesc(e.target.value)} />
-              <Button onClick={handleAddTopic} className="w-full">Create Topic</Button>
-            </div>
-          </DialogContent>
-        </Dialog>
+        {isAdmin && (
+          <Dialog open={topicDialogOpen} onOpenChange={setTopicDialogOpen}>
+            <DialogTrigger asChild>
+              <Button size="sm"><Plus className="h-4 w-4 mr-1" /> Add Topic</Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader><DialogTitle>New Topic</DialogTitle></DialogHeader>
+              <div className="space-y-3">
+                <Input placeholder="Topic title" value={newTitle} onChange={(e) => setNewTitle(e.target.value)} />
+                <Textarea placeholder="Description" value={newDesc} onChange={(e) => setNewDesc(e.target.value)} />
+                <Button onClick={handleAddTopic} className="w-full">Create Topic</Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+        )}
       </div>
 
       {topics.length === 0 ? (
