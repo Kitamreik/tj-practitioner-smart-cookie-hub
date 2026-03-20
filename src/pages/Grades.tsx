@@ -1,29 +1,64 @@
+import { useState, useRef } from "react";
 import { useLMS } from "@/context/LMSContext";
 import { useAuth } from "@/context/AuthContext";
+import { useSemester } from "@/context/SemesterContext";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle,
+} from "@/components/ui/dialog";
+import { Upload, FileText, CheckCircle } from "lucide-react";
+import { format } from "date-fns";
+import { toast } from "sonner";
 
 export default function Grades() {
-  const { students, assignments, grades } = useLMS();
+  const { students, assignments, grades, submissions, addSubmission } = useLMS();
   const { user, isStudent } = useAuth();
+  const { activeSemester } = useSemester();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [submitDialog, setSubmitDialog] = useState<{ assignmentId: string } | null>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+
+  const filteredAssignments = assignments.filter(a => a.semesterId === activeSemester.id);
 
   const getGrade = (studentId: string, assignmentId: string) =>
     grades.find((g) => g.studentId === studentId && g.assignmentId === assignmentId);
 
-  // Students only see their own grades (matched by name since mock IDs may differ)
+  const getSubmissions = (studentId: string, assignmentId: string) =>
+    submissions.filter(s => s.studentId === studentId && s.assignmentId === assignmentId);
+
   const visibleStudents = isStudent
     ? students.filter((s) => s.name === user?.name || s.email === user?.email)
     : students;
+
+  // Find student ID for the logged-in student
+  const myStudentId = isStudent
+    ? students.find(s => s.name === user?.name || s.email === user?.email)?.id
+    : null;
+
+  const handleSubmit = () => {
+    if (!selectedFile || !submitDialog || !myStudentId) return;
+    addSubmission({
+      studentId: myStudentId,
+      assignmentId: submitDialog.assignmentId,
+      fileName: selectedFile.name,
+      fileUrl: URL.createObjectURL(selectedFile),
+    });
+    toast.success("Assignment submitted successfully!");
+    setSelectedFile(null);
+    setSubmitDialog(null);
+  };
 
   return (
     <div className="max-w-5xl mx-auto space-y-6">
       <div>
         <h1 className="font-display text-2xl font-bold">Grades</h1>
         <p className="text-sm text-muted-foreground mt-1">
-          {isStudent ? "Your assignment scores and submission status." : "View all student scores and submission status."}
+          {isStudent ? `Your scores for ${activeSemester.name}.` : `All student scores for ${activeSemester.name}.`}
         </p>
       </div>
 
@@ -33,8 +68,8 @@ export default function Grades() {
             <TableHeader>
               <TableRow>
                 {!isStudent && <TableHead className="min-w-[160px]">Student</TableHead>}
-                {assignments.map((a) => (
-                  <TableHead key={a.id} className="min-w-[120px] text-center">
+                {filteredAssignments.map((a) => (
+                  <TableHead key={a.id} className="min-w-[140px] text-center">
                     <div>{a.title}</div>
                     <div className="text-[10px] text-muted-foreground font-normal">Max: {a.maxScore}</div>
                   </TableHead>
@@ -44,7 +79,7 @@ export default function Grades() {
             <TableBody>
               {visibleStudents.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={assignments.length + 1} className="text-center text-muted-foreground py-8">
+                  <TableCell colSpan={filteredAssignments.length + 1} className="text-center text-muted-foreground py-8">
                     No grade data found for your account.
                   </TableCell>
                 </TableRow>
@@ -52,22 +87,45 @@ export default function Grades() {
                 visibleStudents.map((s) => (
                   <TableRow key={s.id}>
                     {!isStudent && <TableCell className="font-medium">{s.name}</TableCell>}
-                    {assignments.map((a) => {
+                    {filteredAssignments.map((a) => {
                       const g = getGrade(s.id, a.id);
+                      const subs = getSubmissions(s.id, a.id);
+                      const isMyRow = s.id === myStudentId;
                       return (
                         <TableCell key={a.id} className="text-center">
                           {g?.turnedIn ? (
-                            <div>
-                              <span className="font-semibold">{g.score ?? "—"}</span>
-                              <span className="text-muted-foreground text-xs">/{a.maxScore}</span>
-                              <Badge variant="outline" className="ml-2 text-[10px] border-success text-success">
-                                Turned In
-                              </Badge>
+                            <div className="space-y-1">
+                              <div>
+                                <span className="font-semibold">{g.score ?? "—"}</span>
+                                <span className="text-muted-foreground text-xs">/{a.maxScore}</span>
+                                <Badge variant="outline" className="ml-2 text-[10px] border-success text-success">
+                                  Turned In
+                                </Badge>
+                              </div>
+                              {subs.length > 0 && (
+                                <div className="text-[10px] text-muted-foreground flex items-center justify-center gap-1">
+                                  <FileText className="h-3 w-3" />
+                                  {subs[subs.length - 1].fileName}
+                                </div>
+                              )}
                             </div>
                           ) : (
-                            <Badge variant="outline" className="text-[10px] border-destructive text-destructive">
-                              Missing
-                            </Badge>
+                            <div className="space-y-1">
+                              <Badge variant="outline" className="text-[10px] border-destructive text-destructive">
+                                Missing
+                              </Badge>
+                              {isStudent && isMyRow && (
+                                <div>
+                                  <Button
+                                    variant="outline" size="sm"
+                                    className="text-[10px] h-6 mt-1"
+                                    onClick={() => setSubmitDialog({ assignmentId: a.id })}
+                                  >
+                                    <Upload className="h-3 w-3 mr-1" /> Submit
+                                  </Button>
+                                </div>
+                              )}
+                            </div>
                           )}
                         </TableCell>
                       );
@@ -79,6 +137,46 @@ export default function Grades() {
           </Table>
         </CardContent>
       </Card>
+
+      {/* Submission Dialog */}
+      <Dialog open={!!submitDialog} onOpenChange={(o) => { if (!o) { setSubmitDialog(null); setSelectedFile(null); } }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Submit Assignment</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              Upload a file to submit your assignment. Accepted formats: PDF, images, documents.
+            </p>
+            <div
+              className="border-2 border-dashed border-border rounded-lg p-6 text-center cursor-pointer hover:border-primary/50 transition-colors"
+              onClick={() => fileInputRef.current?.click()}
+            >
+              {selectedFile ? (
+                <div className="flex items-center justify-center gap-2">
+                  <CheckCircle className="h-5 w-5 text-success" />
+                  <span className="text-sm font-medium">{selectedFile.name}</span>
+                </div>
+              ) : (
+                <div>
+                  <Upload className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
+                  <p className="text-sm text-muted-foreground">Click to select a file</p>
+                </div>
+              )}
+              <input
+                ref={fileInputRef}
+                type="file"
+                className="hidden"
+                accept=".pdf,.png,.jpg,.jpeg,.doc,.docx,.txt"
+                onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
+              />
+            </div>
+            <Button onClick={handleSubmit} disabled={!selectedFile} className="w-full">
+              Submit Assignment
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

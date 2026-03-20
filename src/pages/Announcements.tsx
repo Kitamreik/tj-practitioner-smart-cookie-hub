@@ -1,12 +1,13 @@
 import { useState } from "react";
 import { useLMS } from "@/context/LMSContext";
 import { useAuth } from "@/context/AuthContext";
+import { useSemester } from "@/context/SemesterContext";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger,
+  Dialog, DialogContent, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Plus, Trash2, Pencil } from "lucide-react";
@@ -15,10 +16,13 @@ import { format } from "date-fns";
 export default function Announcements() {
   const { announcements, addAnnouncement, updateAnnouncement, deleteAnnouncement } = useLMS();
   const { isAdmin } = useAuth();
+  const { activeSemester } = useSemester();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
+
+  const filtered = announcements.filter(a => a.semesterId === activeSemester.id);
 
   const openNew = () => { setEditId(null); setTitle(""); setBody(""); setDialogOpen(true); };
   const openEdit = (id: string) => {
@@ -32,7 +36,7 @@ export default function Announcements() {
     if (editId) {
       updateAnnouncement(editId, { title: title.trim(), body: body.trim() });
     } else {
-      addAnnouncement({ title: title.trim(), body: body.trim() });
+      addAnnouncement({ title: title.trim(), body: body.trim(), semesterId: activeSemester.id });
     }
     setDialogOpen(false);
   };
@@ -42,7 +46,7 @@ export default function Announcements() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="font-display text-2xl font-bold">Announcements</h1>
-          <p className="text-sm text-muted-foreground mt-1">Stay up to date with course news.</p>
+          <p className="text-sm text-muted-foreground mt-1">Stay up to date with {activeSemester.name} course news.</p>
         </div>
         {isAdmin && <Button size="sm" onClick={openNew}><Plus className="h-4 w-4 mr-1" /> New Announcement</Button>}
       </div>
@@ -58,11 +62,11 @@ export default function Announcements() {
         </DialogContent>
       </Dialog>
 
-      {announcements.length === 0 ? (
-        <Card><CardContent className="p-8 text-center text-muted-foreground">No announcements yet.</CardContent></Card>
+      {filtered.length === 0 ? (
+        <Card><CardContent className="p-8 text-center text-muted-foreground">No announcements for {activeSemester.name}.</CardContent></Card>
       ) : (
         <div className="space-y-3">
-          {announcements.map((a) => (
+          {filtered.map((a) => (
             <Card key={a.id} className="group">
               <CardContent className="p-5">
                 <div className="flex items-start justify-between">

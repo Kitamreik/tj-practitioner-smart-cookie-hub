@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useLMS } from "@/context/LMSContext";
+import { useAuth } from "@/context/AuthContext";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,31 +9,42 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { Plus, Trash2, MessageCircle, Send } from "lucide-react";
+import { Plus, Trash2, MessageCircle, Send, Pencil, Check, X } from "lucide-react";
 import { format } from "date-fns";
 
 export default function Discussions() {
-  const { discussions, addDiscussion, addReply, deleteDiscussion } = useLMS();
+  const { discussions, addDiscussion, addReply, updateReply, deleteDiscussion } = useLMS();
+  const { user, isAdmin } = useAuth();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
-  const [author, setAuthor] = useState("");
   const [replyMap, setReplyMap] = useState<Record<string, string>>({});
-  const [replyAuthorMap, setReplyAuthorMap] = useState<Record<string, string>>({});
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [editingReply, setEditingReply] = useState<{ discussionId: string; replyId: string } | null>(null);
+  const [editReplyText, setEditReplyText] = useState("");
 
   const handleCreate = () => {
-    if (!title.trim() || !author.trim()) return;
-    addDiscussion({ title: title.trim(), body: body.trim(), author: author.trim() });
-    setTitle(""); setBody(""); setAuthor(""); setDialogOpen(false);
+    if (!title.trim() || !user) return;
+    addDiscussion({ title: title.trim(), body: body.trim(), author: user.name, authorId: user.id });
+    setTitle(""); setBody(""); setDialogOpen(false);
   };
 
   const handleReply = (discussionId: string) => {
     const text = replyMap[discussionId]?.trim();
-    const rAuthor = replyAuthorMap[discussionId]?.trim();
-    if (!text || !rAuthor) return;
-    addReply(discussionId, { body: text, author: rAuthor });
+    if (!text || !user) return;
+    addReply(discussionId, { body: text, author: user.name, authorId: user.id });
     setReplyMap((p) => ({ ...p, [discussionId]: "" }));
+  };
+
+  const startEditReply = (discussionId: string, replyId: string, currentBody: string) => {
+    setEditingReply({ discussionId, replyId });
+    setEditReplyText(currentBody);
+  };
+
+  const saveEditReply = () => {
+    if (!editingReply || !editReplyText.trim()) return;
+    updateReply(editingReply.discussionId, editingReply.replyId, editReplyText.trim());
+    setEditingReply(null);
   };
 
   return (
@@ -49,7 +61,6 @@ export default function Discussions() {
         <DialogContent>
           <DialogHeader><DialogTitle>Start a Discussion</DialogTitle></DialogHeader>
           <div className="space-y-3">
-            <Input placeholder="Your name" value={author} onChange={(e) => setAuthor(e.target.value)} />
             <Input placeholder="Discussion title" value={title} onChange={(e) => setTitle(e.target.value)} />
             <Textarea placeholder="What's on your mind?" rows={3} value={body} onChange={(e) => setBody(e.target.value)} />
             <Button onClick={handleCreate} className="w-full">Post Discussion</Button>
@@ -71,32 +82,64 @@ export default function Discussions() {
                       {d.author} · {format(new Date(d.createdAt), "MMM d, yyyy")} · {d.replies.length} {d.replies.length === 1 ? "reply" : "replies"}
                     </p>
                   </div>
-                  <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <Tooltip><TooltipTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => deleteDiscussion(d.id)}><Trash2 className="h-3 w-3" /></Button>
-                    </TooltipTrigger><TooltipContent>Delete discussion</TooltipContent></Tooltip>
-                  </div>
+                  {/* Only admin can delete discussions */}
+                  {isAdmin && (
+                    <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <Tooltip><TooltipTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => deleteDiscussion(d.id)}><Trash2 className="h-3 w-3" /></Button>
+                      </TooltipTrigger><TooltipContent>Delete discussion</TooltipContent></Tooltip>
+                    </div>
+                  )}
                 </div>
                 {d.body && <p className="text-sm mt-2 text-foreground/90">{d.body}</p>}
 
                 {expandedId === d.id && (
                   <div className="mt-4 space-y-3 border-t border-border pt-3">
-                    {d.replies.map((r) => (
-                      <div key={r.id} className="flex gap-3 items-start">
-                        <MessageCircle className="h-4 w-4 mt-0.5 text-muted-foreground shrink-0" />
-                        <div>
-                          <p className="text-sm">{r.body}</p>
-                          <p className="text-[10px] text-muted-foreground">{r.author} · {format(new Date(r.createdAt), "MMM d, h:mm a")}</p>
+                    {d.replies.map((r) => {
+                      const isEditingThis = editingReply?.discussionId === d.id && editingReply?.replyId === r.id;
+                      const canEdit = user?.id === r.authorId;
+                      return (
+                        <div key={r.id} className="flex gap-3 items-start group/reply">
+                          <MessageCircle className="h-4 w-4 mt-0.5 text-muted-foreground shrink-0" />
+                          <div className="flex-1">
+                            {isEditingThis ? (
+                              <div className="flex gap-2 items-center">
+                                <Input
+                                  value={editReplyText}
+                                  onChange={(e) => setEditReplyText(e.target.value)}
+                                  onKeyDown={(e) => e.key === "Enter" && saveEditReply()}
+                                  className="flex-1 h-8 text-sm"
+                                  autoFocus
+                                />
+                                <Button variant="ghost" size="icon" className="h-7 w-7 text-success" onClick={saveEditReply}>
+                                  <Check className="h-3 w-3" />
+                                </Button>
+                                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setEditingReply(null)}>
+                                  <X className="h-3 w-3" />
+                                </Button>
+                              </div>
+                            ) : (
+                              <>
+                                <p className="text-sm">{r.body}</p>
+                                <div className="flex items-center gap-2">
+                                  <p className="text-[10px] text-muted-foreground">{r.author} · {format(new Date(r.createdAt), "MMM d, h:mm a")}</p>
+                                  {canEdit && (
+                                    <Button
+                                      variant="ghost" size="icon"
+                                      className="h-5 w-5 opacity-0 group-hover/reply:opacity-100 transition-opacity"
+                                      onClick={() => startEditReply(d.id, r.id, r.body)}
+                                    >
+                                      <Pencil className="h-2.5 w-2.5" />
+                                    </Button>
+                                  )}
+                                </div>
+                              </>
+                            )}
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                     <div className="flex gap-2">
-                      <Input
-                        placeholder="Your name"
-                        className="w-28"
-                        value={replyAuthorMap[d.id] || ""}
-                        onChange={(e) => setReplyAuthorMap((p) => ({ ...p, [d.id]: e.target.value }))}
-                      />
                       <Input
                         placeholder="Write a reply..."
                         className="flex-1"
