@@ -1,23 +1,17 @@
 import { useState } from "react";
 import { useLMS, type ContentItem } from "@/context/LMSContext";
 import { useAuth } from "@/context/AuthContext";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useSemester } from "@/context/SemesterContext";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
+  Accordion, AccordionContent, AccordionItem, AccordionTrigger,
 } from "@/components/ui/accordion";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger,
 } from "@/components/ui/dialog";
 import { Plus, Link as LinkIcon, FileText, Image, Type, Trash2, ExternalLink } from "lucide-react";
 import { format } from "date-fns";
@@ -26,6 +20,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 export default function Topics() {
   const { topics, addTopic, addContentToTopic, removeContentFromTopic } = useLMS();
   const { isAdmin } = useAuth();
+  const { activeSemester } = useSemester();
   const [newTitle, setNewTitle] = useState("");
   const [newDesc, setNewDesc] = useState("");
   const [topicDialogOpen, setTopicDialogOpen] = useState(false);
@@ -36,9 +31,11 @@ export default function Topics() {
   const [contentUrl, setContentUrl] = useState("");
   const [contentDesc, setContentDesc] = useState("");
 
+  const filteredTopics = topics.filter(t => t.semesterId === activeSemester.id);
+
   const handleAddTopic = () => {
     if (!newTitle.trim()) return;
-    addTopic({ title: newTitle.trim(), description: newDesc.trim() });
+    addTopic({ title: newTitle.trim(), description: newDesc.trim(), semesterId: activeSemester.id });
     setNewTitle("");
     setNewDesc("");
     setTopicDialogOpen(false);
@@ -73,7 +70,7 @@ export default function Topics() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="font-display text-2xl font-bold">Topics</h1>
-          <p className="text-sm text-muted-foreground mt-1">Browse course topics and materials.</p>
+          <p className="text-sm text-muted-foreground mt-1">Browse course topics and materials for {activeSemester.name}.</p>
         </div>
         {isAdmin && (
           <Dialog open={topicDialogOpen} onOpenChange={setTopicDialogOpen}>
@@ -92,11 +89,11 @@ export default function Topics() {
         )}
       </div>
 
-      {topics.length === 0 ? (
-        <Card><CardContent className="p-8 text-center text-muted-foreground">No topics yet. Create one to get started.</CardContent></Card>
+      {filteredTopics.length === 0 ? (
+        <Card><CardContent className="p-8 text-center text-muted-foreground">No topics for {activeSemester.name}.</CardContent></Card>
       ) : (
         <Accordion type="multiple" className="space-y-3">
-          {topics.map((topic) => (
+          {filteredTopics.map((topic) => (
             <AccordionItem key={topic.id} value={topic.id} className="border rounded-lg bg-card px-4">
               <AccordionTrigger className="hover:no-underline">
                 <div className="text-left">

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useLMS } from "@/context/LMSContext";
+import { useSemester } from "@/context/SemesterContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,31 +17,37 @@ import { Users, CheckCircle, MessageSquare, BookOpen, Search, Pencil, Trash2, Sa
 export default function Admin() {
   const {
     students, assignments, grades, discussions, topics,
-    updateGrade, toggleTurnedIn, deleteTopic, deleteAnnouncement,
-    announcements, updateTopic, updateAnnouncement,
+    updateGrade, deleteTopic, deleteAnnouncement,
+    announcements,
   } = useLMS();
+  const { activeSemester } = useSemester();
 
   const [search, setSearch] = useState("");
   const [editingGrade, setEditingGrade] = useState<{ studentId: string; assignmentId: string } | null>(null);
   const [editScore, setEditScore] = useState("");
 
+  // Filter by semester
+  const semTopics = topics.filter(t => t.semesterId === activeSemester.id);
+  const semAnnouncements = announcements.filter(a => a.semesterId === activeSemester.id);
+  const semAssignments = assignments.filter(a => a.semesterId === activeSemester.id);
+  const semAssignmentIds = new Set(semAssignments.map(a => a.id));
+  const semGrades = grades.filter(g => semAssignmentIds.has(g.assignmentId));
+
   // Metrics
-  const totalGrades = grades.length;
-  const turnedIn = grades.filter((g) => g.turnedIn).length;
-  const turnInRate = totalGrades > 0 ? Math.round((turnedIn / totalGrades) * 100) : 0;
+  const turnedIn = semGrades.filter((g) => g.turnedIn).length;
+  const turnInRate = semGrades.length > 0 ? Math.round((turnedIn / semGrades.length) * 100) : 0;
 
   const totalReplies = discussions.reduce((sum, d) => sum + d.replies.length, 0);
   const avgReplies = discussions.length > 0 ? (totalReplies / discussions.length).toFixed(1) : "0";
 
-  // Chart data: turn-in rate per assignment
-  const chartData = assignments.map((a) => {
+  // Chart data
+  const chartData = semAssignments.map((a) => {
     const aGrades = grades.filter((g) => g.assignmentId === a.id);
     const turned = aGrades.filter((g) => g.turnedIn).length;
     const rate = aGrades.length > 0 ? Math.round((turned / aGrades.length) * 100) : 0;
     return { name: a.title, rate };
   });
 
-  // Discussion engagement chart
   const discChart = discussions.map((d) => ({
     name: d.title.length > 20 ? d.title.slice(0, 20) + "…" : d.title,
     replies: d.replies.length,
@@ -70,17 +77,16 @@ export default function Admin() {
     { label: "Students", value: students.length, icon: Users, accent: "text-primary" },
     { label: "Turn-in Rate", value: `${turnInRate}%`, icon: CheckCircle, accent: "text-success" },
     { label: "Avg Replies", value: avgReplies, icon: MessageSquare, accent: "text-warning" },
-    { label: "Active Topics", value: topics.length, icon: BookOpen, accent: "text-secondary" },
+    { label: "Active Topics", value: semTopics.length, icon: BookOpen, accent: "text-secondary" },
   ];
 
   return (
     <div className="max-w-6xl mx-auto space-y-8">
       <div>
         <h1 className="font-display text-2xl font-bold">Admin Console</h1>
-        <p className="text-sm text-muted-foreground mt-1">Manage grades, content, and view engagement metrics.</p>
+        <p className="text-sm text-muted-foreground mt-1">Manage grades, content, and view engagement metrics for {activeSemester.name}.</p>
       </div>
 
-      {/* Stat Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {statCards.map((s) => (
           <Card key={s.label}>
@@ -97,7 +103,6 @@ export default function Admin() {
         ))}
       </div>
 
-      {/* Charts */}
       <div className="grid md:grid-cols-2 gap-6">
         <Card>
           <CardHeader className="pb-2">
@@ -142,19 +147,13 @@ export default function Admin() {
         </Card>
       </div>
 
-      {/* Grade Management Table */}
       <Card>
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
             <CardTitle className="font-display text-base">Student Grades</CardTitle>
             <div className="relative w-64">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search students..."
-                className="pl-9"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-              />
+              <Input placeholder="Search students..." className="pl-9" value={search} onChange={(e) => setSearch(e.target.value)} />
             </div>
           </div>
         </CardHeader>
@@ -163,7 +162,7 @@ export default function Admin() {
             <TableHeader>
               <TableRow>
                 <TableHead className="min-w-[160px]">Student</TableHead>
-                {assignments.map((a) => (
+                {semAssignments.map((a) => (
                   <TableHead key={a.id} className="min-w-[140px] text-center">
                     <div>{a.title}</div>
                     <div className="text-[10px] text-muted-foreground font-normal">Max: {a.maxScore}</div>
@@ -178,7 +177,7 @@ export default function Admin() {
                     <div>{s.name}</div>
                     <div className="text-[10px] text-muted-foreground">{s.email}</div>
                   </TableCell>
-                  {assignments.map((a) => {
+                  {semAssignments.map((a) => {
                     const g = getGrade(s.id, a.id);
                     const isEditing = editingGrade?.studentId === s.id && editingGrade?.assignmentId === a.id;
                     return (
@@ -227,17 +226,16 @@ export default function Admin() {
         </CardContent>
       </Card>
 
-      {/* Content Management */}
       <div className="grid md:grid-cols-2 gap-6">
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="font-display text-base">Manage Topics</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
-            {topics.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No topics.</p>
+            {semTopics.length === 0 ? (
+              <p className="text-sm text-muted-foreground">No topics for {activeSemester.name}.</p>
             ) : (
-              topics.map((t) => (
+              semTopics.map((t) => (
                 <div key={t.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/50 group">
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-medium truncate">{t.title}</p>
@@ -262,10 +260,10 @@ export default function Admin() {
             <CardTitle className="font-display text-base">Manage Announcements</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
-            {announcements.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No announcements.</p>
+            {semAnnouncements.length === 0 ? (
+              <p className="text-sm text-muted-foreground">No announcements for {activeSemester.name}.</p>
             ) : (
-              announcements.map((a) => (
+              semAnnouncements.map((a) => (
                 <div key={a.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/50 group">
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-medium truncate">{a.title}</p>

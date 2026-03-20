@@ -12,6 +12,7 @@ export interface ContentItem {
 
 export interface Topic {
   id: string;
+  semesterId: string;
   title: string;
   description: string;
   content: ContentItem[];
@@ -20,6 +21,7 @@ export interface Topic {
 
 export interface Announcement {
   id: string;
+  semesterId: string;
   title: string;
   body: string;
   createdAt: string;
@@ -30,6 +32,7 @@ export interface DiscussionPost {
   title: string;
   body: string;
   author: string;
+  authorId: string;
   replies: DiscussionReply[];
   createdAt: string;
 }
@@ -38,6 +41,7 @@ export interface DiscussionReply {
   id: string;
   body: string;
   author: string;
+  authorId: string;
   createdAt: string;
 }
 
@@ -51,9 +55,19 @@ export interface Student {
 export interface Assignment {
   id: string;
   topicId: string;
+  semesterId: string;
   title: string;
   dueDate: string;
   maxScore: number;
+}
+
+export interface Submission {
+  id: string;
+  studentId: string;
+  assignmentId: string;
+  fileName: string;
+  fileUrl: string;
+  submittedAt: string;
 }
 
 export interface Grade {
@@ -81,6 +95,7 @@ interface LMSState {
   students: Student[];
   assignments: Assignment[];
   grades: Grade[];
+  submissions: Submission[];
   notifications: Notification[];
 }
 
@@ -95,10 +110,12 @@ interface LMSContextType extends LMSState {
   deleteAnnouncement: (id: string) => void;
   addDiscussion: (d: Omit<DiscussionPost, "id" | "createdAt" | "replies">) => void;
   addReply: (discussionId: string, reply: Omit<DiscussionReply, "id" | "createdAt">) => void;
+  updateReply: (discussionId: string, replyId: string, body: string) => void;
   deleteDiscussion: (id: string) => void;
   addAssignment: (a: Omit<Assignment, "id">) => void;
   updateGrade: (studentId: string, assignmentId: string, score: number) => void;
   toggleTurnedIn: (studentId: string, assignmentId: string) => void;
+  addSubmission: (sub: Omit<Submission, "id" | "submittedAt">) => void;
   addNotification: (n: Omit<Notification, "id" | "createdAt" | "read">) => void;
   markNotificationRead: (id: string) => void;
   clearNotifications: () => void;
@@ -119,7 +136,7 @@ const defaultStudents: Student[] = [
 
 const defaultTopics: Topic[] = [
   {
-    id: "t1",
+    id: "t1", semesterId: "sem-5",
     title: "Introduction to Computer Science",
     description: "Foundational concepts in CS including algorithms, data structures, and computational thinking.",
     content: [
@@ -129,7 +146,7 @@ const defaultTopics: Topic[] = [
     createdAt: "2026-01-15T10:00:00Z",
   },
   {
-    id: "t2",
+    id: "t2", semesterId: "sem-5",
     title: "Data Structures & Algorithms",
     description: "In-depth study of arrays, linked lists, trees, graphs, sorting, and searching algorithms.",
     content: [
@@ -137,11 +154,19 @@ const defaultTopics: Topic[] = [
     ],
     createdAt: "2026-02-01T10:00:00Z",
   },
+  {
+    id: "t3", semesterId: "sem-4",
+    title: "Operating Systems",
+    description: "Processes, threads, memory management, and file systems.",
+    content: [],
+    createdAt: "2025-09-01T10:00:00Z",
+  },
 ];
 
 const defaultAssignments: Assignment[] = [
-  { id: "a1", topicId: "t1", title: "CS Fundamentals Quiz", dueDate: "2026-03-20T23:59:00Z", maxScore: 100 },
-  { id: "a2", topicId: "t2", title: "Array Implementation", dueDate: "2026-03-25T23:59:00Z", maxScore: 50 },
+  { id: "a1", topicId: "t1", semesterId: "sem-5", title: "CS Fundamentals Quiz", dueDate: "2026-03-20T23:59:00Z", maxScore: 100 },
+  { id: "a2", topicId: "t2", semesterId: "sem-5", title: "Array Implementation", dueDate: "2026-03-25T23:59:00Z", maxScore: 50 },
+  { id: "a3", topicId: "t3", semesterId: "sem-4", title: "OS Concepts Quiz", dueDate: "2025-11-15T23:59:00Z", maxScore: 80 },
 ];
 
 const defaultGrades: Grade[] = [
@@ -155,20 +180,26 @@ const defaultGrades: Grade[] = [
   { id: "g8", studentId: "s3", assignmentId: "a2", score: 38, turnedIn: true, turnedInAt: "2026-03-24T12:00:00Z" },
   { id: "g9", studentId: "s4", assignmentId: "a2", score: null, turnedIn: false },
   { id: "g10", studentId: "s5", assignmentId: "a2", score: 48, turnedIn: true, turnedInAt: "2026-03-23T20:00:00Z" },
+  { id: "g11", studentId: "s1", assignmentId: "a3", score: 72, turnedIn: true, turnedInAt: "2025-11-14T10:00:00Z" },
+  { id: "g12", studentId: "s2", assignmentId: "a3", score: 65, turnedIn: true, turnedInAt: "2025-11-13T14:00:00Z" },
+  { id: "g13", studentId: "s3", assignmentId: "a3", score: null, turnedIn: false },
+  { id: "g14", studentId: "s4", assignmentId: "a3", score: 70, turnedIn: true, turnedInAt: "2025-11-12T08:00:00Z" },
+  { id: "g15", studentId: "s5", assignmentId: "a3", score: null, turnedIn: false },
 ];
 
 const defaultAnnouncements: Announcement[] = [
-  { id: "an1", title: "Welcome to Spring 2026!", body: "Welcome students! Please review the syllabus and come prepared for our first class.", createdAt: "2026-01-10T09:00:00Z" },
-  { id: "an2", title: "Midterm Exam Schedule", body: "The midterm exam will be held on March 28th. Please review Chapters 1-5.", createdAt: "2026-03-01T09:00:00Z" },
+  { id: "an1", semesterId: "sem-5", title: "Welcome to Spring 2026!", body: "Welcome students! Please review the syllabus and come prepared for our first class.", createdAt: "2026-01-10T09:00:00Z" },
+  { id: "an2", semesterId: "sem-5", title: "Midterm Exam Schedule", body: "The midterm exam will be held on March 28th. Please review Chapters 1-5.", createdAt: "2026-03-01T09:00:00Z" },
+  { id: "an3", semesterId: "sem-4", title: "Fall 2025 Welcome", body: "Welcome to the Fall 2025 semester!", createdAt: "2025-08-25T09:00:00Z" },
 ];
 
 const defaultDiscussions: DiscussionPost[] = [
   {
     id: "d1", title: "Best resources for learning algorithms?", body: "What books or websites do you recommend for additional practice?",
-    author: "Alice Johnson",
+    author: "Alice Johnson", authorId: "s1",
     replies: [
-      { id: "r1", body: "I really like 'Introduction to Algorithms' by CLRS!", author: "Bob Smith", createdAt: "2026-03-02T14:00:00Z" },
-      { id: "r2", body: "LeetCode has great practice problems.", author: "Carol Davis", createdAt: "2026-03-02T15:30:00Z" },
+      { id: "r1", body: "I really like 'Introduction to Algorithms' by CLRS!", author: "Bob Smith", authorId: "s2", createdAt: "2026-03-02T14:00:00Z" },
+      { id: "r2", body: "LeetCode has great practice problems.", author: "Carol Davis", authorId: "s3", createdAt: "2026-03-02T15:30:00Z" },
     ],
     createdAt: "2026-03-02T10:00:00Z",
   },
@@ -186,13 +217,28 @@ const defaultState: LMSState = {
   students: defaultStudents,
   assignments: defaultAssignments,
   grades: defaultGrades,
+  submissions: [],
   notifications: defaultNotifications,
 };
 
 function loadState(): LMSState {
   try {
     const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved) return JSON.parse(saved);
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      // Migration: add submissions if missing
+      if (!parsed.submissions) parsed.submissions = [];
+      // Migration: add semesterId if missing
+      parsed.topics = parsed.topics?.map((t: any) => ({ semesterId: "sem-5", ...t })) || [];
+      parsed.announcements = parsed.announcements?.map((a: any) => ({ semesterId: "sem-5", ...a })) || [];
+      parsed.assignments = parsed.assignments?.map((a: any) => ({ semesterId: "sem-5", ...a })) || [];
+      // Migration: add authorId if missing
+      parsed.discussions = parsed.discussions?.map((d: any) => ({
+        authorId: "", ...d,
+        replies: d.replies?.map((r: any) => ({ authorId: "", ...r })) || [],
+      })) || [];
+      return parsed;
+    }
   } catch {}
   return defaultState;
 }
@@ -273,6 +319,17 @@ export function LMSProvider({ children }: { children: React.ReactNode }) {
     }));
   }, [update]);
 
+  const updateReply = useCallback((discussionId: string, replyId: string, body: string) => {
+    update(s => ({
+      ...s,
+      discussions: s.discussions.map(d =>
+        d.id === discussionId
+          ? { ...d, replies: d.replies.map(r => r.id === replyId ? { ...r, body } : r) }
+          : d
+      ),
+    }));
+  }, [update]);
+
   const deleteDiscussion = useCallback((id: string) => {
     update(s => ({ ...s, discussions: s.discussions.filter(d => d.id !== id) }));
   }, [update]);
@@ -313,6 +370,18 @@ export function LMSProvider({ children }: { children: React.ReactNode }) {
     }));
   }, [update]);
 
+  const addSubmission = useCallback((sub: Omit<Submission, "id" | "submittedAt">) => {
+    update(s => ({
+      ...s,
+      submissions: [...s.submissions, { ...sub, id: uid(), submittedAt: now() }],
+      grades: s.grades.map(g =>
+        g.studentId === sub.studentId && g.assignmentId === sub.assignmentId
+          ? { ...g, turnedIn: true, turnedInAt: g.turnedInAt || now() }
+          : g
+      ),
+    }));
+  }, [update]);
+
   const addNotification = useCallback((n: Omit<Notification, "id" | "createdAt" | "read">) => {
     update(s => ({
       ...s,
@@ -338,8 +407,8 @@ export function LMSProvider({ children }: { children: React.ReactNode }) {
         addTopic, updateTopic, deleteTopic,
         addContentToTopic, removeContentFromTopic,
         addAnnouncement, updateAnnouncement, deleteAnnouncement,
-        addDiscussion, addReply, deleteDiscussion,
-        addAssignment, updateGrade, toggleTurnedIn,
+        addDiscussion, addReply, updateReply, deleteDiscussion,
+        addAssignment, updateGrade, toggleTurnedIn, addSubmission,
         addNotification, markNotificationRead, clearNotifications,
       }}
     >

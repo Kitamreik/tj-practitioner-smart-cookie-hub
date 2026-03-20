@@ -11,21 +11,25 @@ export default function Dashboard() {
   const { user } = useAuth();
   const { activeSemester } = useSemester();
 
-  const totalAssignments = assignments.length;
-  const totalGrades = grades.length;
-  const turnedIn = grades.filter((g) => g.turnedIn).length;
-  const turnInRate = totalGrades > 0 ? Math.round((turnedIn / totalGrades) * 100) : 0;
+  const semTopics = topics.filter(t => t.semesterId === activeSemester.id);
+  const semAnnouncements = announcements.filter(a => a.semesterId === activeSemester.id);
+  const semAssignments = assignments.filter(a => a.semesterId === activeSemester.id);
+  const semAssignmentIds = new Set(semAssignments.map(a => a.id));
+  const semGrades = grades.filter(g => semAssignmentIds.has(g.assignmentId));
 
-  const upcomingAssignments = assignments
+  const turnedIn = semGrades.filter((g) => g.turnedIn).length;
+  const turnInRate = semGrades.length > 0 ? Math.round((turnedIn / semGrades.length) * 100) : 0;
+
+  const upcomingAssignments = semAssignments
     .filter((a) => new Date(a.dueDate) > new Date())
     .sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime())
     .slice(0, 3);
 
-  const recentAnnouncements = announcements.slice(0, 3);
+  const recentAnnouncements = semAnnouncements.slice(0, 3);
 
   const stats = [
-    { label: "Topics", value: topics.length, icon: BookOpen, color: "text-primary" },
-    { label: "Announcements", value: announcements.length, icon: Megaphone, color: "text-warning" },
+    { label: "Topics", value: semTopics.length, icon: BookOpen, color: "text-primary" },
+    { label: "Announcements", value: semAnnouncements.length, icon: Megaphone, color: "text-warning" },
     { label: "Discussions", value: discussions.length, icon: MessageSquare, color: "text-secondary" },
     { label: "Turn-in Rate", value: `${turnInRate}%`, icon: GraduationCap, color: "text-success" },
   ];
