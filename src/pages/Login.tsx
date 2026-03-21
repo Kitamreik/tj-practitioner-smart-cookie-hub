@@ -45,8 +45,23 @@ export default function Login() {
     setError("");
 
     if (mode === "login") {
-      // Pre-validate credentials before 2FA
-      const users = JSON.parse(localStorage.getItem("academic-stream-users") || "[]");
+      // Pre-validate credentials before 2FA using the same loader as AuthContext
+      let users: any[] = [];
+      try {
+        const saved = localStorage.getItem("academic-stream-users");
+        users = saved ? JSON.parse(saved) : [];
+      } catch {}
+      // If no users in storage, check against defaults
+      if (users.length === 0) {
+        users = [
+          { email: "admin@university.edu", password: "admin123" },
+          { email: "alice@university.edu", password: "student123" },
+          { email: "bob@university.edu", password: "student123" },
+          { email: "carol@university.edu", password: "student123" },
+          { email: "david@university.edu", password: "student123" },
+          { email: "emma@university.edu", password: "student123" },
+        ];
+      }
       const found = users.find((u: any) => u.email.toLowerCase() === email.toLowerCase() && u.password === password);
       if (!found) {
         setError("Invalid email or password");
