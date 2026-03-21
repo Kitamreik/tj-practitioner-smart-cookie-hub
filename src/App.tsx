@@ -61,6 +61,7 @@ function AppRoutes() {
             <Route path="/discussions" element={<Discussions />} />
             <Route path="/grades" element={<Grades />} />
             <Route path="/notifications" element={<NotificationPreferences />} />
+            <Route path="/profile" element={<Profile />} />
             <Route path="/admin" element={<AdminRoute><Admin /></AdminRoute>} />
             <Route path="/submissions" element={<AdminRoute><Submissions /></AdminRoute>} />
             <Route path="/login" element={<Navigate to="/" replace />} />
