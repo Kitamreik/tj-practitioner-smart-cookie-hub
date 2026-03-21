@@ -19,15 +19,6 @@ import Submissions from "./pages/Submissions";
 import NotificationPreferences from "./pages/NotificationPreferences";
 import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
-import Dashboard from "./pages/Dashboard";
-import Topics from "./pages/Topics";
-import Announcements from "./pages/Announcements";
-import Discussions from "./pages/Discussions";
-import Grades from "./pages/Grades";
-import Admin from "./pages/Admin";
-import Submissions from "./pages/Submissions";
-import NotificationPreferences from "./pages/NotificationPreferences";
-import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
