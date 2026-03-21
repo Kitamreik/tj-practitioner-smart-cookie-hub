@@ -14,26 +14,16 @@ import Announcements from "./pages/Announcements";
 import Discussions from "./pages/Discussions";
 import Grades from "./pages/Grades";
 import Admin from "./pages/Admin";
+import Submissions from "./pages/Submissions";
+import NotificationPreferences from "./pages/NotificationPreferences";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
-
-function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { user } = useAuth();
-  if (!user) return <Navigate to="/login" replace />;
-  return <>{children}</>;
-}
 
 function AdminRoute({ children }: { children: React.ReactNode }) {
   const { user, isAdmin } = useAuth();
   if (!user) return <Navigate to="/login" replace />;
   if (!isAdmin) return <Navigate to="/" replace />;
-  return <>{children}</>;
-}
-
-function AuthRoute({ children }: { children: React.ReactNode }) {
-  const { user } = useAuth();
-  if (user) return <Navigate to="/" replace />;
   return <>{children}</>;
 }
 
@@ -59,7 +49,9 @@ function AppRoutes() {
             <Route path="/announcements" element={<Announcements />} />
             <Route path="/discussions" element={<Discussions />} />
             <Route path="/grades" element={<Grades />} />
+            <Route path="/notifications" element={<NotificationPreferences />} />
             <Route path="/admin" element={<AdminRoute><Admin /></AdminRoute>} />
+            <Route path="/submissions" element={<AdminRoute><Submissions /></AdminRoute>} />
             <Route path="/login" element={<Navigate to="/" replace />} />
             <Route path="*" element={<NotFound />} />
           </Routes>

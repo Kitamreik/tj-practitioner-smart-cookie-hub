@@ -10,6 +10,8 @@ import {
   LogOut,
   ChevronDown,
   User,
+  Bell,
+  FileText,
 } from "lucide-react";
 import {
   Sidebar,
@@ -39,10 +41,12 @@ const mainNav = [
   { title: "Announcements", url: "/announcements", icon: Megaphone },
   { title: "Discussions", url: "/discussions", icon: MessageSquare },
   { title: "Grades", url: "/grades", icon: GraduationCap },
+  { title: "Notifications", url: "/notifications", icon: Bell },
 ];
 
 const adminNav = [
   { title: "Admin Console", url: "/admin", icon: Shield },
+  { title: "Submissions", url: "/submissions", icon: FileText },
 ];
 
 export function AppSidebar() {
