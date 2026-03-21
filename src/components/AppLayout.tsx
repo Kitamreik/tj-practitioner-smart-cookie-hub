@@ -1,6 +1,7 @@
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { NotificationPanel } from "@/components/NotificationPanel";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { useAuth } from "@/context/AuthContext";
 import { useSemester } from "@/context/SemesterContext";
 import { Badge } from "@/components/ui/badge";
@@ -25,10 +26,11 @@ export function AppLayout({ children }: AppLayoutProps) {
                 {activeSemester.name}
               </Badge>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
               <span className="text-xs text-muted-foreground hidden sm:block">
                 {user?.name} <span className="capitalize">({user?.role})</span>
               </span>
+              <ThemeToggle />
               <NotificationPanel />
             </div>
           </header>

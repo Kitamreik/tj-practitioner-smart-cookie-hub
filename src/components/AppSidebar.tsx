@@ -42,6 +42,7 @@ const mainNav = [
   { title: "Discussions", url: "/discussions", icon: MessageSquare },
   { title: "Grades", url: "/grades", icon: GraduationCap },
   { title: "Notifications", url: "/notifications", icon: Bell },
+  { title: "My Profile", url: "/profile", icon: User },
 ];
 
 const adminNav = [
