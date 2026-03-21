@@ -5,7 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { GraduationCap, AlertCircle } from "lucide-react";
+import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
+import { GraduationCap, AlertCircle, ShieldCheck } from "lucide-react";
 
 export default function Login() {
   const { login, signup } = useAuth();
@@ -16,19 +17,112 @@ export default function Login() {
   const [role, setRole] = useState<UserRole>("student");
   const [error, setError] = useState("");
 
+  // 2FA state
+  const [twoFAStep, setTwoFAStep] = useState(false);
+  const [otpValue, setOtpValue] = useState("");
+  const [pendingAction, setPendingAction] = useState<(() => void) | null>(null);
+  const [mockCode] = useState(() => String(Math.floor(100000 + Math.random() * 900000)));
+
+  const triggerTwoFA = (onSuccess: () => void) => {
+    setPendingAction(() => onSuccess);
+    setTwoFAStep(true);
+    setOtpValue("");
+    setError("");
+  };
+
+  const verifyOTP = () => {
+    if (otpValue === mockCode) {
+      pendingAction?.();
+      setTwoFAStep(false);
+      setPendingAction(null);
+    } else {
+      setError("Invalid verification code. Please try again.");
+    }
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
 
     if (mode === "login") {
-      const result = login(email, password);
-      if (!result.success) setError(result.error || "Login failed");
+      // Pre-validate credentials before 2FA
+      const users = JSON.parse(localStorage.getItem("academic-stream-users") || "[]");
+      const found = users.find((u: any) => u.email.toLowerCase() === email.toLowerCase() && u.password === password);
+      if (!found) {
+        setError("Invalid email or password");
+        return;
+      }
+      triggerTwoFA(() => {
+        const result = login(email, password);
+        if (!result.success) setError(result.error || "Login failed");
+      });
     } else {
       if (!name.trim()) { setError("Name is required"); return; }
-      const result = signup(name.trim(), email, password, role);
-      if (!result.success) setError(result.error || "Signup failed");
+      triggerTwoFA(() => {
+        const result = signup(name.trim(), email, password, role);
+        if (!result.success) setError(result.error || "Signup failed");
+      });
     }
   };
+
+  if (twoFAStep) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background p-4">
+        <div className="w-full max-w-md space-y-6">
+          <div className="text-center space-y-2">
+            <div className="flex justify-center">
+              <div className="p-3 rounded-xl bg-primary/10">
+                <ShieldCheck className="h-8 w-8 text-primary" />
+              </div>
+            </div>
+            <h1 className="font-display text-2xl font-bold">Two-Factor Authentication</h1>
+            <p className="text-sm text-muted-foreground">Enter the 6-digit code to continue</p>
+          </div>
+
+          <Card>
+            <CardContent className="pt-6 space-y-6">
+              <div className="p-3 rounded-lg bg-muted text-center">
+                <p className="text-xs text-muted-foreground mb-1">Your mock SMS code:</p>
+                <p className="font-mono text-2xl font-bold tracking-[0.3em] text-primary">{mockCode}</p>
+              </div>
+
+              <div className="flex justify-center">
+                <InputOTP maxLength={6} value={otpValue} onChange={setOtpValue}>
+                  <InputOTPGroup>
+                    <InputOTPSlot index={0} />
+                    <InputOTPSlot index={1} />
+                    <InputOTPSlot index={2} />
+                    <InputOTPSlot index={3} />
+                    <InputOTPSlot index={4} />
+                    <InputOTPSlot index={5} />
+                  </InputOTPGroup>
+                </InputOTP>
+              </div>
+
+              {error && (
+                <div className="flex items-center gap-2 text-sm text-destructive bg-destructive/10 p-3 rounded-md">
+                  <AlertCircle className="h-4 w-4 shrink-0" />
+                  {error}
+                </div>
+              )}
+
+              <Button onClick={verifyOTP} disabled={otpValue.length !== 6} className="w-full">
+                Verify Code
+              </Button>
+
+              <Button variant="ghost" className="w-full text-sm" onClick={() => { setTwoFAStep(false); setPendingAction(null); setError(""); }}>
+                Back to {mode === "login" ? "Sign In" : "Sign Up"}
+              </Button>
+            </CardContent>
+          </Card>
+
+          <p className="text-[10px] text-center text-muted-foreground">
+            ⚠️ This is mock 2FA — the code is shown above for demo purposes.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
@@ -120,7 +214,7 @@ export default function Login() {
         </Card>
 
         <p className="text-[10px] text-center text-muted-foreground">
-          ⚠️ This is mock authentication using localStorage — not secure for production.
+          ⚠️ Mock authentication with 2FA simulation — not secure for production.
         </p>
       </div>
     </div>
