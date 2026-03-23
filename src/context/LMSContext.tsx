@@ -242,6 +242,7 @@ function loadState(): LMSState {
       const parsed = JSON.parse(saved);
       // Migration: add submissions if missing
       if (!parsed.submissions) parsed.submissions = [];
+      if (!parsed.vaultFiles) parsed.vaultFiles = [];
       // Migration: add semesterId if missing
       parsed.topics = parsed.topics?.map((t: any) => ({ semesterId: "sem-5", ...t })) || [];
       parsed.announcements = parsed.announcements?.map((a: any) => ({ semesterId: "sem-5", ...a })) || [];
