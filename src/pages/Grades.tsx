@@ -14,6 +14,7 @@ import {
 import { Upload, FileText, CheckCircle } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
+import { FilePreview } from "@/components/FilePreview";
 
 export default function Grades() {
   const { students, assignments, grades, submissions, addSubmission } = useLMS();
