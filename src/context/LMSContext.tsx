@@ -414,6 +414,17 @@ export function LMSProvider({ children }: { children: React.ReactNode }) {
     update(s => ({ ...s, notifications: s.notifications.map(n => ({ ...n, read: true })) }));
   }, [update]);
 
+  const addVaultFile = useCallback((f: Omit<VaultFile, "id" | "addedAt">) => {
+    update(s => ({
+      ...s,
+      vaultFiles: [...s.vaultFiles, { ...f, id: uid(), addedAt: now() }],
+    }));
+  }, [update]);
+
+  const deleteVaultFile = useCallback((id: string) => {
+    update(s => ({ ...s, vaultFiles: s.vaultFiles.filter(f => f.id !== id) }));
+  }, [update]);
+
   return (
     <LMSContext.Provider
       value={{
@@ -424,6 +435,7 @@ export function LMSProvider({ children }: { children: React.ReactNode }) {
         addDiscussion, addReply, updateReply, deleteDiscussion,
         addAssignment, updateGrade, toggleTurnedIn, addSubmission,
         addNotification, markNotificationRead, clearNotifications,
+        addVaultFile, deleteVaultFile,
       }}
     >
       {children}
