@@ -18,6 +18,8 @@ import Admin from "./pages/Admin";
 import Submissions from "./pages/Submissions";
 import NotificationPreferences from "./pages/NotificationPreferences";
 import Profile from "./pages/Profile";
+import CalendarView from "./pages/CalendarView";
+import FileVault from "./pages/FileVault";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
