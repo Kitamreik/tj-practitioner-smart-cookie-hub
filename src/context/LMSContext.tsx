@@ -88,6 +88,16 @@ export interface Notification {
   createdAt: string;
 }
 
+export interface VaultFile {
+  id: string;
+  studentId: string;
+  semesterId: string;
+  fileName: string;
+  fileUrl: string;
+  fileType: "link" | "upload";
+  addedAt: string;
+}
+
 interface LMSState {
   topics: Topic[];
   announcements: Announcement[];
@@ -97,6 +107,7 @@ interface LMSState {
   grades: Grade[];
   submissions: Submission[];
   notifications: Notification[];
+  vaultFiles: VaultFile[];
 }
 
 interface LMSContextType extends LMSState {
@@ -119,6 +130,8 @@ interface LMSContextType extends LMSState {
   addNotification: (n: Omit<Notification, "id" | "createdAt" | "read">) => void;
   markNotificationRead: (id: string) => void;
   clearNotifications: () => void;
+  addVaultFile: (f: Omit<VaultFile, "id" | "addedAt">) => void;
+  deleteVaultFile: (id: string) => void;
 }
 
 const uid = () => crypto.randomUUID();
