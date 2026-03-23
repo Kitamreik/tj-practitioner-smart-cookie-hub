@@ -88,6 +88,16 @@ export interface Notification {
   createdAt: string;
 }
 
+export interface VaultFile {
+  id: string;
+  studentId: string;
+  semesterId: string;
+  fileName: string;
+  fileUrl: string;
+  fileType: "link" | "upload";
+  addedAt: string;
+}
+
 interface LMSState {
   topics: Topic[];
   announcements: Announcement[];
@@ -97,6 +107,7 @@ interface LMSState {
   grades: Grade[];
   submissions: Submission[];
   notifications: Notification[];
+  vaultFiles: VaultFile[];
 }
 
 interface LMSContextType extends LMSState {
@@ -119,6 +130,8 @@ interface LMSContextType extends LMSState {
   addNotification: (n: Omit<Notification, "id" | "createdAt" | "read">) => void;
   markNotificationRead: (id: string) => void;
   clearNotifications: () => void;
+  addVaultFile: (f: Omit<VaultFile, "id" | "addedAt">) => void;
+  deleteVaultFile: (id: string) => void;
 }
 
 const uid = () => crypto.randomUUID();
@@ -219,6 +232,7 @@ const defaultState: LMSState = {
   grades: defaultGrades,
   submissions: [],
   notifications: defaultNotifications,
+  vaultFiles: [],
 };
 
 function loadState(): LMSState {
@@ -228,6 +242,7 @@ function loadState(): LMSState {
       const parsed = JSON.parse(saved);
       // Migration: add submissions if missing
       if (!parsed.submissions) parsed.submissions = [];
+      if (!parsed.vaultFiles) parsed.vaultFiles = [];
       // Migration: add semesterId if missing
       parsed.topics = parsed.topics?.map((t: any) => ({ semesterId: "sem-5", ...t })) || [];
       parsed.announcements = parsed.announcements?.map((a: any) => ({ semesterId: "sem-5", ...a })) || [];
@@ -400,6 +415,17 @@ export function LMSProvider({ children }: { children: React.ReactNode }) {
     update(s => ({ ...s, notifications: s.notifications.map(n => ({ ...n, read: true })) }));
   }, [update]);
 
+  const addVaultFile = useCallback((f: Omit<VaultFile, "id" | "addedAt">) => {
+    update(s => ({
+      ...s,
+      vaultFiles: [...s.vaultFiles, { ...f, id: uid(), addedAt: now() }],
+    }));
+  }, [update]);
+
+  const deleteVaultFile = useCallback((id: string) => {
+    update(s => ({ ...s, vaultFiles: s.vaultFiles.filter(f => f.id !== id) }));
+  }, [update]);
+
   return (
     <LMSContext.Provider
       value={{
@@ -410,6 +436,7 @@ export function LMSProvider({ children }: { children: React.ReactNode }) {
         addDiscussion, addReply, updateReply, deleteDiscussion,
         addAssignment, updateGrade, toggleTurnedIn, addSubmission,
         addNotification, markNotificationRead, clearNotifications,
+        addVaultFile, deleteVaultFile,
       }}
     >
       {children}

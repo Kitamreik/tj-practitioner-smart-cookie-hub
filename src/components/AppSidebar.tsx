@@ -12,6 +12,7 @@ import {
   User,
   Bell,
   FileText,
+  FolderOpen,
 } from "lucide-react";
 import {
   Sidebar,
@@ -41,6 +42,8 @@ const mainNav = [
   { title: "Announcements", url: "/announcements", icon: Megaphone },
   { title: "Discussions", url: "/discussions", icon: MessageSquare },
   { title: "Grades", url: "/grades", icon: GraduationCap },
+  { title: "Calendar", url: "/calendar", icon: Calendar },
+  { title: "File Vault", url: "/vault", icon: FolderOpen },
   { title: "Notifications", url: "/notifications", icon: Bell },
   { title: "My Profile", url: "/profile", icon: User },
 ];

@@ -18,6 +18,8 @@ import Admin from "./pages/Admin";
 import Submissions from "./pages/Submissions";
 import NotificationPreferences from "./pages/NotificationPreferences";
 import Profile from "./pages/Profile";
+import CalendarView from "./pages/CalendarView";
+import FileVault from "./pages/FileVault";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -51,6 +53,8 @@ function AppRoutes() {
             <Route path="/announcements" element={<Announcements />} />
             <Route path="/discussions" element={<Discussions />} />
             <Route path="/grades" element={<Grades />} />
+            <Route path="/calendar" element={<CalendarView />} />
+            <Route path="/vault" element={<FileVault />} />
             <Route path="/notifications" element={<NotificationPreferences />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/admin" element={<AdminRoute><Admin /></AdminRoute>} />

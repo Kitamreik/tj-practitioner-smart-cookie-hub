@@ -14,6 +14,7 @@ import {
 import { Upload, FileText, CheckCircle } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
+import { FilePreview } from "@/components/FilePreview";
 
 export default function Grades() {
   const { students, assignments, grades, submissions, addSubmission } = useLMS();
@@ -104,8 +105,16 @@ export default function Grades() {
                               </div>
                               {subs.length > 0 && (
                                 <div className="text-[10px] text-muted-foreground flex items-center justify-center gap-1">
-                                  <FileText className="h-3 w-3" />
-                                  {subs[subs.length - 1].fileName}
+                                  <FilePreview
+                                    fileName={subs[subs.length - 1].fileName}
+                                    fileUrl={subs[subs.length - 1].fileUrl}
+                                    trigger={
+                                      <span className="flex items-center gap-1 hover:text-primary transition-colors">
+                                        <FileText className="h-3 w-3" />
+                                        {subs[subs.length - 1].fileName}
+                                      </span>
+                                    }
+                                  />
                                 </div>
                               )}
                             </div>
