@@ -232,6 +232,7 @@ const defaultState: LMSState = {
   grades: defaultGrades,
   submissions: [],
   notifications: defaultNotifications,
+  vaultFiles: [],
 };
 
 function loadState(): LMSState {
