@@ -27,6 +27,8 @@ export function AppLayout({ children }: AppLayoutProps) {
                 {activeSemester.name}
               </Badge>
             </div>
+            <div className="hidden md:block flex-1 max-w-sm mx-4">
+              <GlobalSearch />
             <div className="flex items-center gap-2">
               <span className="text-xs text-muted-foreground hidden sm:block">
                 {user?.name} <span className="capitalize">({user?.role})</span>
