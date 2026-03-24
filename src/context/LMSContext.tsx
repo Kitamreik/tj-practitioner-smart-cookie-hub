@@ -462,6 +462,7 @@ export function LMSProvider({ children }: { children: React.ReactNode }) {
         addAssignment, updateGrade, toggleTurnedIn, addSubmission,
         addNotification, markNotificationRead, clearNotifications,
         addVaultFile, deleteVaultFile,
+        reorderTopics, reorderContent,
       }}
     >
       {children}
