@@ -428,6 +428,29 @@ export function LMSProvider({ children }: { children: React.ReactNode }) {
     update(s => ({ ...s, vaultFiles: s.vaultFiles.filter(f => f.id !== id) }));
   }, [update]);
 
+  const reorderTopics = useCallback((semesterId: string, fromIndex: number, toIndex: number) => {
+    update(s => {
+      const semTopics = s.topics.filter(t => t.semesterId === semesterId);
+      const otherTopics = s.topics.filter(t => t.semesterId !== semesterId);
+      const [moved] = semTopics.splice(fromIndex, 1);
+      semTopics.splice(toIndex, 0, moved);
+      return { ...s, topics: [...otherTopics, ...semTopics] };
+    });
+  }, [update]);
+
+  const reorderContent = useCallback((topicId: string, fromIndex: number, toIndex: number) => {
+    update(s => ({
+      ...s,
+      topics: s.topics.map(t => {
+        if (t.id !== topicId) return t;
+        const content = [...t.content];
+        const [moved] = content.splice(fromIndex, 1);
+        content.splice(toIndex, 0, moved);
+        return { ...t, content };
+      }),
+    }));
+  }, [update]);
+
   return (
     <LMSContext.Provider
       value={{
