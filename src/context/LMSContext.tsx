@@ -132,6 +132,8 @@ interface LMSContextType extends LMSState {
   clearNotifications: () => void;
   addVaultFile: (f: Omit<VaultFile, "id" | "addedAt">) => void;
   deleteVaultFile: (id: string) => void;
+  reorderTopics: (semesterId: string, fromIndex: number, toIndex: number) => void;
+  reorderContent: (topicId: string, fromIndex: number, toIndex: number) => void;
 }
 
 const uid = () => crypto.randomUUID();
