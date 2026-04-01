@@ -37,7 +37,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 
 const mainNav = [
-  { title: "Dashboard", url: "/", icon: LayoutDashboard },
+  { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
   { title: "Topics", url: "/topics", icon: BookOpen },
   { title: "Announcements", url: "/announcements", icon: Megaphone },
   { title: "Discussions", url: "/discussions", icon: MessageSquare },
