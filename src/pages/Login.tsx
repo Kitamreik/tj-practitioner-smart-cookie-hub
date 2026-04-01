@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
-import { GraduationCap, AlertCircle, ShieldCheck } from "lucide-react";
+import { GraduationCap, AlertCircle, ShieldCheck, RefreshCw, Eye, EyeOff } from "lucide-react";
 
 export default function Login() {
   const { login, signup } = useAuth();
