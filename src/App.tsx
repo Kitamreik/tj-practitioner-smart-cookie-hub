@@ -20,6 +20,7 @@ import Submissions from "./pages/Submissions";
 import NotificationPreferences from "./pages/NotificationPreferences";
 import Profile from "./pages/Profile";
 import CalendarView from "./pages/CalendarView";
+import Webmaster from "./pages/Webmaster";
 import FileVault from "./pages/FileVault";
 import NotFound from "./pages/NotFound";
 
@@ -29,6 +30,13 @@ function AdminRoute({ children }: { children: React.ReactNode }) {
   const { user, isAdmin } = useAuth();
   if (!user) return <Navigate to="/" replace />;
   if (!isAdmin) return <Navigate to="/dashboard" replace />;
+  return <>{children}</>;
+}
+
+function WebmasterRoute({ children }: { children: React.ReactNode }) {
+  const { user, isWebmaster } = useAuth();
+  if (!user) return <Navigate to="/" replace />;
+  if (!isWebmaster) return <Navigate to="/dashboard" replace />;
   return <>{children}</>;
 }
 
@@ -104,6 +112,11 @@ function AppRoutes() {
             <AdminRoute>
               <AppLayout><Submissions /></AppLayout>
             </AdminRoute>
+          } />
+          <Route path="/webmaster" element={
+            <WebmasterRoute>
+              <AppLayout><Webmaster /></AppLayout>
+            </WebmasterRoute>
           } />
           <Route path="*" element={<NotFound />} />
         </Routes>

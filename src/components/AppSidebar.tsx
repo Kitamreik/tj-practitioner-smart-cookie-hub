@@ -10,6 +10,7 @@ import {
   LogOut,
   ChevronDown,
   User,
+  Users,
   Bell,
   FileText,
   FolderOpen,
@@ -53,10 +54,14 @@ const adminNav = [
   { title: "Submissions", url: "/submissions", icon: FileText },
 ];
 
+const webmasterNav = [
+  { title: "User Management", url: "/webmaster", icon: Users },
+];
+
 export function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
-  const { user, isAdmin, logout } = useAuth();
+  const { user, isAdmin, isWebmaster, logout } = useAuth();
   const { semesters, activeSemester, setActiveSemesterId } = useSemester();
 
   return (
@@ -162,6 +167,37 @@ export function AppSidebar() {
             <SidebarGroupContent>
               <SidebarMenu>
                 {adminNav.map((item) => (
+                  <SidebarMenuItem key={item.title}>
+                    <SidebarMenuButton asChild>
+                      <RRNavLink
+                        to={item.url}
+                        className={({ isActive }) =>
+                          `flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                            isActive
+                              ? "bg-sidebar-accent text-sidebar-primary-foreground"
+                              : "text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
+                          }`
+                        }
+                      >
+                        <item.icon className="h-4 w-4 shrink-0" />
+                        {!collapsed && <span>{item.title}</span>}
+                      </RRNavLink>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ))}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
+
+        {isWebmaster && (
+          <SidebarGroup>
+            <SidebarGroupLabel className="text-sidebar-foreground/50 uppercase text-[10px] tracking-widest font-body">
+              Webmaster
+            </SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {webmasterNav.map((item) => (
                   <SidebarMenuItem key={item.title}>
                     <SidebarMenuButton asChild>
                       <RRNavLink
