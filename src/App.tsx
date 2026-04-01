@@ -33,6 +33,13 @@ function AdminRoute({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
+function WebmasterRoute({ children }: { children: React.ReactNode }) {
+  const { user, isWebmaster } = useAuth();
+  if (!user) return <Navigate to="/" replace />;
+  if (!isWebmaster) return <Navigate to="/dashboard" replace />;
+  return <>{children}</>;
+}
+
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
   if (!user) return <Navigate to="/" replace />;
