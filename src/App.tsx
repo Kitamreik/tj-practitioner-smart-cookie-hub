@@ -113,6 +113,11 @@ function AppRoutes() {
               <AppLayout><Submissions /></AppLayout>
             </AdminRoute>
           } />
+          <Route path="/webmaster" element={
+            <WebmasterRoute>
+              <AppLayout><Webmaster /></AppLayout>
+            </WebmasterRoute>
+          } />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </LMSProvider>

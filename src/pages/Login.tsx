@@ -253,12 +253,15 @@ export default function Login() {
 
             <div className="mt-6 border-t border-border pt-4">
               <p className="text-xs text-muted-foreground text-center mb-3">Demo Accounts</p>
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-3 gap-2">
+                <Button variant="outline" size="sm" className="text-xs" onClick={() => { setEmail("webmaster@university.edu"); setPassword("webmaster123"); setMode("login"); }}>
+                  Webmaster
+                </Button>
                 <Button variant="outline" size="sm" className="text-xs" onClick={() => { setEmail("admin@university.edu"); setPassword("admin123"); setMode("login"); }}>
-                  Admin Demo
+                  Admin
                 </Button>
                 <Button variant="outline" size="sm" className="text-xs" onClick={() => { setEmail("alice@university.edu"); setPassword("student123"); setMode("login"); }}>
-                  Student Demo
+                  Student
                 </Button>
               </div>
             </div>
