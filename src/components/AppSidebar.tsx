@@ -53,6 +53,10 @@ const adminNav = [
   { title: "Submissions", url: "/submissions", icon: FileText },
 ];
 
+const webmasterNav = [
+  { title: "User Management", url: "/webmaster", icon: Users },
+];
+
 export function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
