@@ -8,6 +8,7 @@ import { LMSProvider } from "@/context/LMSContext";
 import { AuthProvider, useAuth } from "@/context/AuthContext";
 import { SemesterProvider } from "@/context/SemesterContext";
 import { AppLayout } from "@/components/AppLayout";
+import Landing from "./pages/Landing";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import Topics from "./pages/Topics";
@@ -27,42 +28,85 @@ const queryClient = new QueryClient();
 function AdminRoute({ children }: { children: React.ReactNode }) {
   const { user, isAdmin } = useAuth();
   if (!user) return <Navigate to="/login" replace />;
-  if (!isAdmin) return <Navigate to="/" replace />;
+  if (!isAdmin) return <Navigate to="/dashboard" replace />;
+  return <>{children}</>;
+}
+
+function ProtectedRoute({ children }: { children: React.ReactNode }) {
+  const { user } = useAuth();
+  if (!user) return <Navigate to="/login" replace />;
   return <>{children}</>;
 }
 
 function AppRoutes() {
   const { user } = useAuth();
 
-  if (!user) {
-    return (
-      <Routes>
-        <Route path="/login" element={<Login />} />
-        <Route path="*" element={<Navigate to="/login" replace />} />
-      </Routes>
-    );
-  }
-
   return (
     <SemesterProvider>
       <LMSProvider>
-        <AppLayout>
-          <Routes>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/topics" element={<Topics />} />
-            <Route path="/announcements" element={<Announcements />} />
-            <Route path="/discussions" element={<Discussions />} />
-            <Route path="/grades" element={<Grades />} />
-            <Route path="/calendar" element={<CalendarView />} />
-            <Route path="/vault" element={<FileVault />} />
-            <Route path="/notifications" element={<NotificationPreferences />} />
-            <Route path="/profile" element={<Profile />} />
-            <Route path="/admin" element={<AdminRoute><Admin /></AdminRoute>} />
-            <Route path="/submissions" element={<AdminRoute><Submissions /></AdminRoute>} />
-            <Route path="/login" element={<Navigate to="/" replace />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </AppLayout>
+        <Routes>
+          {/* Public routes */}
+          <Route path="/" element={user ? <Navigate to="/dashboard" replace /> : <Landing />} />
+          <Route path="/login" element={user ? <Navigate to="/dashboard" replace /> : <Login />} />
+
+          {/* Protected routes */}
+          <Route path="/dashboard" element={
+            <ProtectedRoute>
+              <AppLayout><Dashboard /></AppLayout>
+            </ProtectedRoute>
+          } />
+          <Route path="/topics" element={
+            <ProtectedRoute>
+              <AppLayout><Topics /></AppLayout>
+            </ProtectedRoute>
+          } />
+          <Route path="/announcements" element={
+            <ProtectedRoute>
+              <AppLayout><Announcements /></AppLayout>
+            </ProtectedRoute>
+          } />
+          <Route path="/discussions" element={
+            <ProtectedRoute>
+              <AppLayout><Discussions /></AppLayout>
+            </ProtectedRoute>
+          } />
+          <Route path="/grades" element={
+            <ProtectedRoute>
+              <AppLayout><Grades /></AppLayout>
+            </ProtectedRoute>
+          } />
+          <Route path="/calendar" element={
+            <ProtectedRoute>
+              <AppLayout><CalendarView /></AppLayout>
+            </ProtectedRoute>
+          } />
+          <Route path="/vault" element={
+            <ProtectedRoute>
+              <AppLayout><FileVault /></AppLayout>
+            </ProtectedRoute>
+          } />
+          <Route path="/notifications" element={
+            <ProtectedRoute>
+              <AppLayout><NotificationPreferences /></AppLayout>
+            </ProtectedRoute>
+          } />
+          <Route path="/profile" element={
+            <ProtectedRoute>
+              <AppLayout><Profile /></AppLayout>
+            </ProtectedRoute>
+          } />
+          <Route path="/admin" element={
+            <AdminRoute>
+              <AppLayout><Admin /></AppLayout>
+            </AdminRoute>
+          } />
+          <Route path="/submissions" element={
+            <AdminRoute>
+              <AppLayout><Submissions /></AppLayout>
+            </AdminRoute>
+          } />
+          <Route path="*" element={<NotFound />} />
+        </Routes>
       </LMSProvider>
     </SemesterProvider>
   );
