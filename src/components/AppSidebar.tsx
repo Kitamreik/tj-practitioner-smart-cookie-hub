@@ -61,7 +61,7 @@ const webmasterNav = [
 export function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
-  const { user, isAdmin, logout } = useAuth();
+  const { user, isAdmin, isWebmaster, logout } = useAuth();
   const { semesters, activeSemester, setActiveSemesterId } = useSemester();
 
   return (
