@@ -27,14 +27,14 @@ const queryClient = new QueryClient();
 
 function AdminRoute({ children }: { children: React.ReactNode }) {
   const { user, isAdmin } = useAuth();
-  if (!user) return <Navigate to="/login" replace />;
+  if (!user) return <Navigate to="/" replace />;
   if (!isAdmin) return <Navigate to="/dashboard" replace />;
   return <>{children}</>;
 }
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
-  if (!user) return <Navigate to="/login" replace />;
+  if (!user) return <Navigate to="/" replace />;
   return <>{children}</>;
 }
 

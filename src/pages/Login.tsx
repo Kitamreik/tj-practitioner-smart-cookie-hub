@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
-import { GraduationCap, AlertCircle, ShieldCheck } from "lucide-react";
+import { GraduationCap, AlertCircle, ShieldCheck, RefreshCw, Eye, EyeOff } from "lucide-react";
 
 export default function Login() {
   const { login, signup } = useAuth();
@@ -16,6 +16,31 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [role, setRole] = useState<UserRole>("student");
   const [error, setError] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+
+  const generatePassword = () => {
+    const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz0123456789!@#$%&*";
+    const upper = "ABCDEFGHJKLMNPQRSTUVWXYZ";
+    const lower = "abcdefghijkmnopqrstuvwxyz";
+    const digits = "0123456789";
+    const symbols = "!@#$%&*";
+    // Guarantee at least one of each category
+    let pw = [
+      upper[Math.floor(Math.random() * upper.length)],
+      lower[Math.floor(Math.random() * lower.length)],
+      digits[Math.floor(Math.random() * digits.length)],
+      symbols[Math.floor(Math.random() * symbols.length)],
+    ];
+    for (let i = 4; i < 16; i++) pw.push(chars[Math.floor(Math.random() * chars.length)]);
+    // Shuffle
+    for (let i = pw.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [pw[i], pw[j]] = [pw[j], pw[i]];
+    }
+    const generated = pw.join("");
+    setPassword(generated);
+    setShowPassword(true);
+  };
 
   // 2FA state
   const [twoFAStep, setTwoFAStep] = useState(false);
@@ -173,8 +198,20 @@ export default function Login() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
-                <Input id="password" type="password" placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} required />
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="password">Password</Label>
+                  {mode === "signup" && (
+                    <button type="button" onClick={generatePassword} className="flex items-center gap-1 text-xs text-primary hover:underline">
+                      <RefreshCw className="h-3 w-3" /> Generate Strong Password
+                    </button>
+                  )}
+                </div>
+                <div className="relative">
+                  <Input id="password" type={showPassword ? "text" : "password"} placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} required className="pr-10" />
+                  <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
               </div>
 
               {mode === "signup" && (
