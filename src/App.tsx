@@ -20,6 +20,7 @@ import Submissions from "./pages/Submissions";
 import NotificationPreferences from "./pages/NotificationPreferences";
 import Profile from "./pages/Profile";
 import CalendarView from "./pages/CalendarView";
+import Webmaster from "./pages/Webmaster";
 import FileVault from "./pages/FileVault";
 import NotFound from "./pages/NotFound";
 
