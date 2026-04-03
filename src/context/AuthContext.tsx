@@ -118,6 +118,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const { password: _, ...userData } = users[idx];
       setUser(userData);
     }
+    logActivity({ action: "user_edit", actor: user?.name || "System", actorRole: user?.role || "unknown", target: users[idx].name, details: `Edited user ${users[idx].email}` });
     return { success: true };
   };
 
