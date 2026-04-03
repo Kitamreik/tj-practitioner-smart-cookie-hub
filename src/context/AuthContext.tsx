@@ -97,7 +97,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return { success: true };
   };
 
-  const logout = () => setUser(null);
+  const logout = () => {
+    if (user) logActivity({ action: "logout", actor: user.name, actorRole: user.role, details: "Logged out" });
+    setUser(null);
+  };
 
   const getAllUsers = () => loadUsers();
 
