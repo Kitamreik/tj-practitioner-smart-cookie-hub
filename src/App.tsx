@@ -94,6 +94,11 @@ function AppRoutes() {
               <AppLayout><FileVault /></AppLayout>
             </ProtectedRoute>
           } />
+          <Route path="/exams" element={
+            <ProtectedRoute>
+              <AppLayout><Exams /></AppLayout>
+            </ProtectedRoute>
+          } />
           <Route path="/notifications" element={
             <ProtectedRoute>
               <AppLayout><NotificationPreferences /></AppLayout>
