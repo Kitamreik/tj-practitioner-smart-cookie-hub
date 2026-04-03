@@ -79,6 +79,7 @@ export default function Login() {
       // If no users in storage, check against defaults
       if (users.length === 0) {
         users = [
+          { email: "webmaster@university.edu", password: "webmaster123" },
           { email: "admin@university.edu", password: "admin123" },
           { email: "alice@university.edu", password: "student123" },
           { email: "bob@university.edu", password: "student123" },
