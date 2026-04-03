@@ -14,6 +14,7 @@ import {
   Bell,
   FileText,
   FolderOpen,
+  ClipboardList,
 } from "lucide-react";
 import {
   Sidebar,
