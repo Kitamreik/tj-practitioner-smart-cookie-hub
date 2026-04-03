@@ -152,7 +152,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       isStudent: user?.role === "student",
       isWebmaster: user?.role === "webmaster",
       login, signup, logout,
-      getAllUsers, updateUser, deleteUser,
+      getAllUsers, updateUser, deleteUser, createUser,
     }}>
       {children}
     </AuthContext.Provider>
