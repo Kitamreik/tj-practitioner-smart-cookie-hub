@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
+import { logActivity } from "@/lib/activityLog";
 
 export type UserRole = "admin" | "student" | "webmaster";
 
@@ -23,6 +24,7 @@ interface AuthContextType {
   getAllUsers: () => StoredUser[];
   updateUser: (id: string, data: Partial<StoredUser>) => { success: boolean; error?: string };
   deleteUser: (id: string) => { success: boolean; error?: string };
+  createUser: (data: Omit<StoredUser, "id" | "createdAt">) => { success: boolean; error?: string };
 }
 
 const AUTH_KEY = "academic-stream-auth";
@@ -78,6 +80,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (!found) return { success: false, error: "Invalid email or password" };
     const { password: _, ...userData } = found;
     setUser(userData);
+    logActivity({ action: "login", actor: found.name, actorRole: found.role, details: `Logged in as ${found.role}` });
     return { success: true };
   };
 
@@ -94,7 +97,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return { success: true };
   };
 
-  const logout = () => setUser(null);
+  const logout = () => {
+    if (user) logActivity({ action: "logout", actor: user.name, actorRole: user.role, details: "Logged out" });
+    setUser(null);
+  };
 
   const getAllUsers = () => loadUsers();
 
@@ -112,15 +118,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const { password: _, ...userData } = users[idx];
       setUser(userData);
     }
+    logActivity({ action: "user_edit", actor: user?.name || "System", actorRole: user?.role || "unknown", target: users[idx].name, details: `Edited user ${users[idx].email}` });
     return { success: true };
   };
 
   const deleteUser = (id: string) => {
     if (user?.id === id) return { success: false, error: "Cannot delete your own account" };
     const users = loadUsers();
+    const target = users.find(u => u.id === id);
     const filtered = users.filter(u => u.id !== id);
     if (filtered.length === users.length) return { success: false, error: "User not found" };
     saveUsers(filtered);
+    logActivity({ action: "user_delete", actor: user?.name || "System", actorRole: user?.role || "unknown", target: target?.name, details: `Deleted ${target?.email}` });
+    return { success: true };
+  };
+
+  const createUser = (data: Omit<StoredUser, "id" | "createdAt">) => {
+    const users = loadUsers();
+    if (users.find(u => u.email.toLowerCase() === data.email.toLowerCase())) {
+      return { success: false, error: "Email already in use" };
+    }
+    const newUser: StoredUser = { ...data, id: crypto.randomUUID(), createdAt: new Date().toISOString() };
+    users.push(newUser);
+    saveUsers(users);
+    logActivity({ action: "user_create", actor: user?.name || "System", actorRole: user?.role || "unknown", target: newUser.name, details: `Created account ${newUser.email} (${newUser.role})` });
     return { success: true };
   };
 
@@ -131,7 +152,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       isStudent: user?.role === "student",
       isWebmaster: user?.role === "webmaster",
       login, signup, logout,
-      getAllUsers, updateUser, deleteUser,
+      getAllUsers, updateUser, deleteUser, createUser,
     }}>
       {children}
     </AuthContext.Provider>

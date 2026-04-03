@@ -22,6 +22,7 @@ import Profile from "./pages/Profile";
 import CalendarView from "./pages/CalendarView";
 import Webmaster from "./pages/Webmaster";
 import FileVault from "./pages/FileVault";
+import Exams from "./pages/Exams";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -91,6 +92,11 @@ function AppRoutes() {
           <Route path="/vault" element={
             <ProtectedRoute>
               <AppLayout><FileVault /></AppLayout>
+            </ProtectedRoute>
+          } />
+          <Route path="/exams" element={
+            <ProtectedRoute>
+              <AppLayout><Exams /></AppLayout>
             </ProtectedRoute>
           } />
           <Route path="/notifications" element={
