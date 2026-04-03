@@ -22,6 +22,7 @@ import Profile from "./pages/Profile";
 import CalendarView from "./pages/CalendarView";
 import Webmaster from "./pages/Webmaster";
 import FileVault from "./pages/FileVault";
+import Exams from "./pages/Exams";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
