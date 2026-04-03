@@ -80,6 +80,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (!found) return { success: false, error: "Invalid email or password" };
     const { password: _, ...userData } = found;
     setUser(userData);
+    logActivity({ action: "login", actor: found.name, actorRole: found.role, details: `Logged in as ${found.role}` });
     return { success: true };
   };
 
