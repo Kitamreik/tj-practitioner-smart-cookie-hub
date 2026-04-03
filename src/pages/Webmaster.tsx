@@ -1,16 +1,19 @@
 import { useState } from "react";
 import { useAuth, type StoredUser, type UserRole } from "@/context/AuthContext";
-import { Card, CardContent } from "@/components/ui/card";
+import { getActivityLog, logActivity, type ActivityEntry } from "@/lib/activityLog";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import {
   Users, Pencil, Trash2, Mail, Search, Eye, EyeOff,
   Shield, ShieldCheck, GraduationCap, UserCog, Clock, Activity,
+  Plus, LogIn, LogOut, UserPlus, RefreshCw,
 } from "lucide-react";
 
 function RoleIcon({ role }: { role: UserRole }) {
@@ -38,6 +41,24 @@ function StatCard({ icon: Icon, label, value, color }: { icon: any; label: strin
     </Card>
   );
 }
+
+const actionIcons: Record<string, any> = {
+  login: LogIn,
+  logout: LogOut,
+  user_edit: Pencil,
+  user_delete: Trash2,
+  user_create: UserPlus,
+  password_reset: Mail,
+};
+
+const actionColors: Record<string, string> = {
+  login: "text-emerald-600",
+  logout: "text-muted-foreground",
+  user_edit: "text-amber-600",
+  user_delete: "text-destructive",
+  user_create: "text-primary",
+  password_reset: "text-violet-600",
+};
 
 function UserCard({
   user,
@@ -115,7 +136,7 @@ function UserCard({
 }
 
 export default function Webmaster() {
-  const { getAllUsers, updateUser, deleteUser, user: currentUser } = useAuth();
+  const { getAllUsers, updateUser, deleteUser, createUser, user: currentUser } = useAuth();
   const [users, setUsers] = useState<StoredUser[]>(() => getAllUsers());
   const [search, setSearch] = useState("");
   const [roleFilter, setRoleFilter] = useState<"all" | UserRole>("all");
@@ -123,13 +144,16 @@ export default function Webmaster() {
   const [editForm, setEditForm] = useState({ name: "", email: "", password: "", role: "student" as UserRole });
   const [deleteConfirm, setDeleteConfirm] = useState<StoredUser | null>(null);
   const [showPasswords, setShowPasswords] = useState<Record<string, boolean>>({});
+  const [activityLog, setActivityLog] = useState<ActivityEntry[]>(() => getActivityLog());
 
-  const refresh = () => setUsers(getAllUsers());
+  // Create user state
+  const [createOpen, setCreateOpen] = useState(false);
+  const [createForm, setCreateForm] = useState({ name: "", email: "", password: "", role: "student" as UserRole });
+
+  const refresh = () => { setUsers(getAllUsers()); setActivityLog(getActivityLog()); };
 
   const filtered = users.filter(u => {
-    const matchesSearch =
-      u.name.toLowerCase().includes(search.toLowerCase()) ||
-      u.email.toLowerCase().includes(search.toLowerCase());
+    const matchesSearch = u.name.toLowerCase().includes(search.toLowerCase()) || u.email.toLowerCase().includes(search.toLowerCase());
     const matchesRole = roleFilter === "all" || u.role === roleFilter;
     return matchesSearch && matchesRole;
   });
@@ -148,50 +172,58 @@ export default function Webmaster() {
 
   const handleSaveEdit = () => {
     if (!editUser) return;
-    const result = updateUser(editUser.id, {
-      name: editForm.name.trim(),
-      email: editForm.email.trim(),
-      password: editForm.password,
-      role: editForm.role,
-    });
-    if (result.success) {
-      toast.success("User updated successfully");
-      refresh();
-      setEditUser(null);
-    } else {
-      toast.error(result.error);
-    }
+    const result = updateUser(editUser.id, { name: editForm.name.trim(), email: editForm.email.trim(), password: editForm.password, role: editForm.role });
+    if (result.success) { toast.success("User updated"); refresh(); setEditUser(null); }
+    else toast.error(result.error);
   };
 
   const handleDelete = () => {
     if (!deleteConfirm) return;
     const result = deleteUser(deleteConfirm.id);
-    if (result.success) {
-      toast.success(`${deleteConfirm.name} has been deleted`);
-      refresh();
-      setDeleteConfirm(null);
-    } else {
-      toast.error(result.error);
-    }
+    if (result.success) { toast.success(`${deleteConfirm.name} deleted`); refresh(); setDeleteConfirm(null); }
+    else toast.error(result.error);
   };
 
   const handleResetEmail = (u: StoredUser) => {
-    toast.success(`Password reset email sent to ${u.email}`, {
-      description: "This is a mock action — no email was actually sent.",
-    });
+    logActivity({ action: "password_reset", actor: currentUser?.name || "Webmaster", actorRole: currentUser?.role || "webmaster", target: u.name, details: `Sent reset to ${u.email}` });
+    setActivityLog(getActivityLog());
+    toast.success(`Password reset email sent to ${u.email}`, { description: "Mock action — no email sent." });
+  };
+
+  const handleCreateUser = () => {
+    if (!createForm.name.trim() || !createForm.email.trim() || !createForm.password.trim()) {
+      toast.error("All fields are required"); return;
+    }
+    const result = createUser({ name: createForm.name.trim(), email: createForm.email.trim(), password: createForm.password, role: createForm.role });
+    if (result.success) {
+      toast.success(`Created ${createForm.name}`);
+      refresh();
+      setCreateOpen(false);
+      setCreateForm({ name: "", email: "", password: "", role: "student" });
+    } else toast.error(result.error);
+  };
+
+  const generatePassword = () => {
+    const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz0123456789!@#$%&*";
+    const pw: string[] = [];
+    for (let i = 0; i < 16; i++) pw.push(chars[Math.floor(Math.random() * chars.length)]);
+    setCreateForm(f => ({ ...f, password: pw.join("") }));
   };
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-2xl font-display font-bold text-foreground flex items-center gap-2">
-          <UserCog className="h-6 w-6 text-primary" /> User Management Console
-        </h1>
-        <p className="text-sm text-muted-foreground mt-1">Manage platform accounts, roles, and credentials</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-display font-bold text-foreground flex items-center gap-2">
+            <UserCog className="h-6 w-6 text-primary" /> User Management Console
+          </h1>
+          <p className="text-sm text-muted-foreground mt-1">Manage platform accounts, roles, and credentials</p>
+        </div>
+        <Button onClick={() => setCreateOpen(true)}>
+          <Plus className="h-4 w-4 mr-1" /> Create User
+        </Button>
       </div>
 
-      {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <StatCard icon={Users} label="Total Users" value={stats.total} color="bg-primary" />
         <StatCard icon={GraduationCap} label="Students" value={stats.students} color="bg-emerald-500" />
@@ -199,76 +231,92 @@ export default function Webmaster() {
         <StatCard icon={ShieldCheck} label="Webmasters" value={stats.webmasters} color="bg-violet-500" />
       </div>
 
-      {/* Filters */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Search users..."
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            className="pl-9"
-          />
-        </div>
-        <div className="flex gap-1.5">
-          {(["all", "student", "admin", "webmaster"] as const).map(r => (
-            <Button
-              key={r}
-              variant={roleFilter === r ? "default" : "outline"}
-              size="sm"
-              className="text-xs capitalize"
-              onClick={() => setRoleFilter(r)}
-            >
-              {r === "all" ? "All" : r}
-            </Button>
-          ))}
-        </div>
-      </div>
+      <Tabs defaultValue="users">
+        <TabsList>
+          <TabsTrigger value="users" className="gap-1.5"><Users className="h-3.5 w-3.5" /> Users</TabsTrigger>
+          <TabsTrigger value="activity" className="gap-1.5"><Activity className="h-3.5 w-3.5" /> Activity Log</TabsTrigger>
+        </TabsList>
 
-      {/* User Grid */}
-      {filtered.length === 0 ? (
-        <Card>
-          <CardContent className="py-12 text-center text-muted-foreground">
-            <Activity className="h-8 w-8 mx-auto mb-2 opacity-40" />
-            <p className="text-sm">No users match your search</p>
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-          {filtered.map(u => (
-            <UserCard
-              key={u.id}
-              user={u}
-              isSelf={u.id === currentUser?.id}
-              showPassword={!!showPasswords[u.id]}
-              onTogglePassword={() => setShowPasswords(p => ({ ...p, [u.id]: !p[u.id] }))}
-              onEdit={() => openEdit(u)}
-              onDelete={() => setDeleteConfirm(u)}
-              onResetEmail={() => handleResetEmail(u)}
-            />
-          ))}
-        </div>
-      )}
+        <TabsContent value="users" className="space-y-4 mt-4">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input placeholder="Search users..." value={search} onChange={e => setSearch(e.target.value)} className="pl-9" />
+            </div>
+            <div className="flex gap-1.5">
+              {(["all", "student", "admin", "webmaster"] as const).map(r => (
+                <Button key={r} variant={roleFilter === r ? "default" : "outline"} size="sm" className="text-xs capitalize" onClick={() => setRoleFilter(r)}>
+                  {r === "all" ? "All" : r}
+                </Button>
+              ))}
+            </div>
+          </div>
+
+          {filtered.length === 0 ? (
+            <Card><CardContent className="py-12 text-center text-muted-foreground">No users match your search</CardContent></Card>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+              {filtered.map(u => (
+                <UserCard
+                  key={u.id} user={u} isSelf={u.id === currentUser?.id}
+                  showPassword={!!showPasswords[u.id]}
+                  onTogglePassword={() => setShowPasswords(p => ({ ...p, [u.id]: !p[u.id] }))}
+                  onEdit={() => openEdit(u)} onDelete={() => setDeleteConfirm(u)} onResetEmail={() => handleResetEmail(u)}
+                />
+              ))}
+            </div>
+          )}
+        </TabsContent>
+
+        <TabsContent value="activity" className="mt-4">
+          <Card>
+            <CardHeader className="pb-3 flex flex-row items-center justify-between">
+              <CardTitle className="text-base">Recent Activity</CardTitle>
+              <Button variant="ghost" size="sm" onClick={() => setActivityLog(getActivityLog())}>
+                <RefreshCw className="h-3.5 w-3.5 mr-1" /> Refresh
+              </Button>
+            </CardHeader>
+            <CardContent>
+              {activityLog.length === 0 ? (
+                <p className="text-sm text-muted-foreground text-center py-8">No activity recorded yet</p>
+              ) : (
+                <div className="space-y-1">
+                  {activityLog.map(entry => {
+                    const Icon = actionIcons[entry.action] || Activity;
+                    const color = actionColors[entry.action] || "text-muted-foreground";
+                    return (
+                      <div key={entry.id} className="flex items-start gap-3 p-3 rounded-lg hover:bg-muted/50 transition-colors">
+                        <div className={`mt-0.5 ${color}`}>
+                          <Icon className="h-4 w-4" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm">
+                            <span className="font-medium">{entry.actor}</span>
+                            {entry.target && <> → <span className="font-medium">{entry.target}</span></>}
+                          </p>
+                          {entry.details && <p className="text-xs text-muted-foreground">{entry.details}</p>}
+                        </div>
+                        <span className="text-[10px] text-muted-foreground whitespace-nowrap">
+                          {new Date(entry.timestamp).toLocaleString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
 
       {/* Edit Dialog */}
       <Dialog open={!!editUser} onOpenChange={() => setEditUser(null)}>
         <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Edit User</DialogTitle>
-          </DialogHeader>
+          <DialogHeader><DialogTitle>Edit User</DialogTitle></DialogHeader>
           <div className="space-y-4 py-2">
-            <div className="space-y-2">
-              <Label>Full Name</Label>
-              <Input value={editForm.name} onChange={e => setEditForm(f => ({ ...f, name: e.target.value }))} />
-            </div>
-            <div className="space-y-2">
-              <Label>Email</Label>
-              <Input type="email" value={editForm.email} onChange={e => setEditForm(f => ({ ...f, email: e.target.value }))} />
-            </div>
-            <div className="space-y-2">
-              <Label>Password</Label>
-              <Input value={editForm.password} onChange={e => setEditForm(f => ({ ...f, password: e.target.value }))} />
-            </div>
+            <div className="space-y-2"><Label>Full Name</Label><Input value={editForm.name} onChange={e => setEditForm(f => ({ ...f, name: e.target.value }))} /></div>
+            <div className="space-y-2"><Label>Email</Label><Input type="email" value={editForm.email} onChange={e => setEditForm(f => ({ ...f, email: e.target.value }))} /></div>
+            <div className="space-y-2"><Label>Password</Label><Input value={editForm.password} onChange={e => setEditForm(f => ({ ...f, password: e.target.value }))} /></div>
             <div className="space-y-2">
               <Label>Role</Label>
               <Select value={editForm.role} onValueChange={v => setEditForm(f => ({ ...f, role: v as UserRole }))}>
@@ -288,18 +336,51 @@ export default function Webmaster() {
         </DialogContent>
       </Dialog>
 
-      {/* Delete Confirm Dialog */}
+      {/* Delete Confirm */}
       <Dialog open={!!deleteConfirm} onOpenChange={() => setDeleteConfirm(null)}>
         <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Delete User</DialogTitle>
-          </DialogHeader>
+          <DialogHeader><DialogTitle>Delete User</DialogTitle></DialogHeader>
           <p className="text-sm text-muted-foreground">
-            Are you sure you want to delete <strong>{deleteConfirm?.name}</strong> ({deleteConfirm?.email})? This action cannot be undone.
+            Are you sure you want to delete <strong>{deleteConfirm?.name}</strong> ({deleteConfirm?.email})? This cannot be undone.
           </p>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDeleteConfirm(null)}>Cancel</Button>
             <Button variant="destructive" onClick={handleDelete}>Delete</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Create User Dialog */}
+      <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Create New User</DialogTitle></DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-2"><Label>Full Name</Label><Input placeholder="Jane Doe" value={createForm.name} onChange={e => setCreateForm(f => ({ ...f, name: e.target.value }))} /></div>
+            <div className="space-y-2"><Label>Email</Label><Input type="email" placeholder="jane@university.edu" value={createForm.email} onChange={e => setCreateForm(f => ({ ...f, email: e.target.value }))} /></div>
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label>Password</Label>
+                <button type="button" onClick={generatePassword} className="flex items-center gap-1 text-xs text-primary hover:underline">
+                  <RefreshCw className="h-3 w-3" /> Generate
+                </button>
+              </div>
+              <Input value={createForm.password} onChange={e => setCreateForm(f => ({ ...f, password: e.target.value }))} />
+            </div>
+            <div className="space-y-2">
+              <Label>Role</Label>
+              <Select value={createForm.role} onValueChange={v => setCreateForm(f => ({ ...f, role: v as UserRole }))}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="student">Student</SelectItem>
+                  <SelectItem value="admin">Admin / Instructor</SelectItem>
+                  <SelectItem value="webmaster">Webmaster</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setCreateOpen(false)}>Cancel</Button>
+            <Button onClick={handleCreateUser}><UserPlus className="h-4 w-4 mr-1" /> Create</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
