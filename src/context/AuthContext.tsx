@@ -125,9 +125,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const deleteUser = (id: string) => {
     if (user?.id === id) return { success: false, error: "Cannot delete your own account" };
     const users = loadUsers();
+    const target = users.find(u => u.id === id);
     const filtered = users.filter(u => u.id !== id);
     if (filtered.length === users.length) return { success: false, error: "User not found" };
     saveUsers(filtered);
+    logActivity({ action: "user_delete", actor: user?.name || "System", actorRole: user?.role || "unknown", target: target?.name, details: `Deleted ${target?.email}` });
+    return { success: true };
+  };
+
+  const createUser = (data: Omit<StoredUser, "id" | "createdAt">) => {
+    const users = loadUsers();
+    if (users.find(u => u.email.toLowerCase() === data.email.toLowerCase())) {
+      return { success: false, error: "Email already in use" };
+    }
+    const newUser: StoredUser = { ...data, id: crypto.randomUUID(), createdAt: new Date().toISOString() };
+    users.push(newUser);
+    saveUsers(users);
+    logActivity({ action: "user_create", actor: user?.name || "System", actorRole: user?.role || "unknown", target: newUser.name, details: `Created account ${newUser.email} (${newUser.role})` });
     return { success: true };
   };
 
