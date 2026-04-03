@@ -24,6 +24,7 @@ interface AuthContextType {
   getAllUsers: () => StoredUser[];
   updateUser: (id: string, data: Partial<StoredUser>) => { success: boolean; error?: string };
   deleteUser: (id: string) => { success: boolean; error?: string };
+  createUser: (data: Omit<StoredUser, "id" | "createdAt">) => { success: boolean; error?: string };
 }
 
 const AUTH_KEY = "academic-stream-auth";
