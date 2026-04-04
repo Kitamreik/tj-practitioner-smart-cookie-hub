@@ -241,11 +241,14 @@ export default function Login() {
               </Button>
             </form>
 
-            <div className="mt-4 text-center text-sm text-muted-foreground">
+            <div className="mt-4 text-center text-sm text-muted-foreground space-y-1">
               {mode === "login" ? (
-                <p>Don't have an account?{" "}
-                  <button onClick={() => { setMode("signup"); setError(""); }} className="text-primary font-medium hover:underline">Sign up</button>
-                </p>
+                <>
+                  <p>Don't have an account?{" "}
+                    <button onClick={() => { setMode("signup"); setError(""); }} className="text-primary font-medium hover:underline">Sign up</button>
+                  </p>
+                  <p><a href="/forgot-password" className="text-primary font-medium hover:underline">Forgot your password?</a></p>
+                </>
               ) : (
                 <p>Already have an account?{" "}
                   <button onClick={() => { setMode("login"); setError(""); }} className="text-primary font-medium hover:underline">Sign in</button>
