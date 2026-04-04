@@ -1,6 +1,7 @@
 import { useLMS } from "@/context/LMSContext";
 import { useAuth } from "@/context/AuthContext";
 import { useSemester } from "@/context/SemesterContext";
+import AdminAnalytics from "@/components/AdminAnalytics";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BookOpen, Megaphone, MessageSquare, GraduationCap, Clock } from "lucide-react";
 import { format } from "date-fns";
