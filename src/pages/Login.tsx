@@ -223,6 +223,7 @@ export default function Login() {
                     <SelectContent>
                       <SelectItem value="student">Student</SelectItem>
                       <SelectItem value="admin">Admin / Instructor</SelectItem>
+                      <SelectItem value="webmaster">Webmaster</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>

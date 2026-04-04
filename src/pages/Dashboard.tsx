@@ -1,6 +1,7 @@
 import { useLMS } from "@/context/LMSContext";
 import { useAuth } from "@/context/AuthContext";
 import { useSemester } from "@/context/SemesterContext";
+import AdminAnalytics from "@/components/AdminAnalytics";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BookOpen, Megaphone, MessageSquare, GraduationCap, Clock } from "lucide-react";
 import { format } from "date-fns";
@@ -8,7 +9,7 @@ import { Link } from "react-router-dom";
 
 export default function Dashboard() {
   const { topics, announcements, discussions, assignments, grades } = useLMS();
-  const { user } = useAuth();
+  const { user, isAdmin } = useAuth();
   const { activeSemester } = useSemester();
 
   const semTopics = topics.filter(t => t.semesterId === activeSemester.id);
@@ -106,6 +107,8 @@ export default function Dashboard() {
           </CardContent>
         </Card>
       </div>
+
+      {isAdmin && <AdminAnalytics />}
     </div>
   );
 }
