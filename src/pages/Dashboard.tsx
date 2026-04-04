@@ -9,7 +9,7 @@ import { Link } from "react-router-dom";
 
 export default function Dashboard() {
   const { topics, announcements, discussions, assignments, grades } = useLMS();
-  const { user } = useAuth();
+  const { user, isAdmin } = useAuth();
   const { activeSemester } = useSemester();
 
   const semTopics = topics.filter(t => t.semesterId === activeSemester.id);
