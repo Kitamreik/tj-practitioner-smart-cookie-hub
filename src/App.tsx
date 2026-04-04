@@ -10,6 +10,8 @@ import { SemesterProvider } from "@/context/SemesterContext";
 import { AppLayout } from "@/components/AppLayout";
 import Landing from "./pages/Landing";
 import Login from "./pages/Login";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 import Dashboard from "./pages/Dashboard";
 import Topics from "./pages/Topics";
 import Announcements from "./pages/Announcements";
