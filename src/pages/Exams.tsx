@@ -250,44 +250,44 @@ export default function Exams() {
   // Step: Import
   if (step === "import" && isAdmin) {
     return (
-      <div className="space-y-6">
+      <div className="space-y-4 sm:space-y-6">
         <div>
-          <h1 className="text-2xl font-display font-bold flex items-center gap-2">
-            <ClipboardList className="h-6 w-6 text-primary" /> Exam Generator
+          <h1 className="text-xl sm:text-2xl font-display font-bold flex items-center gap-2">
+            <ClipboardList className="h-5 w-5 sm:h-6 sm:w-6 text-primary" /> Exam Generator
           </h1>
-          <p className="text-sm text-muted-foreground mt-1">Import a Google Quiz JSON or load a sample to get started</p>
+          <p className="text-xs sm:text-sm text-muted-foreground mt-1">Import a Google Quiz JSON or load a sample to get started</p>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
           <Card className="border-dashed border-2 hover:border-primary/50 transition-colors cursor-pointer" onClick={() => fileInputRef.current?.click()}>
-            <CardContent className="flex flex-col items-center justify-center py-12 text-center">
-              <Upload className="h-12 w-12 text-muted-foreground mb-4" />
-              <h3 className="font-semibold text-lg">Import JSON File</h3>
-              <p className="text-sm text-muted-foreground mt-1 max-w-xs">Upload a Google Quiz export (JSON format) with questions, options, and correct answers</p>
+            <CardContent className="flex flex-col items-center justify-center py-8 sm:py-12 text-center">
+              <Upload className="h-8 w-8 sm:h-12 sm:w-12 text-muted-foreground mb-3 sm:mb-4" />
+              <h3 className="font-semibold text-base sm:text-lg">Import JSON File</h3>
+              <p className="text-xs sm:text-sm text-muted-foreground mt-1 max-w-xs">Upload a Google Quiz export (JSON format)</p>
               <input ref={fileInputRef} type="file" accept=".json" className="hidden" onChange={handleFileImport} />
             </CardContent>
           </Card>
 
           <Card className="border-dashed border-2 hover:border-primary/50 transition-colors cursor-pointer" onClick={handleLoadSample}>
-            <CardContent className="flex flex-col items-center justify-center py-12 text-center">
-              <BookOpen className="h-12 w-12 text-muted-foreground mb-4" />
-              <h3 className="font-semibold text-lg">Load Sample Quiz</h3>
-              <p className="text-sm text-muted-foreground mt-1 max-w-xs">Use a pre-built Computer Science midterm to explore the grading flow</p>
+            <CardContent className="flex flex-col items-center justify-center py-8 sm:py-12 text-center">
+              <BookOpen className="h-8 w-8 sm:h-12 sm:w-12 text-muted-foreground mb-3 sm:mb-4" />
+              <h3 className="font-semibold text-base sm:text-lg">Load Sample Quiz</h3>
+              <p className="text-xs sm:text-sm text-muted-foreground mt-1 max-w-xs">Use a pre-built Computer Science midterm</p>
             </CardContent>
           </Card>
         </div>
 
         {semesterExams.length > 0 && (
           <Card>
-            <CardHeader><CardTitle className="text-base">Published Exams</CardTitle></CardHeader>
+            <CardHeader><CardTitle className="text-sm sm:text-base">Published Exams</CardTitle></CardHeader>
             <CardContent className="space-y-2">
               {semesterExams.map(exam => (
-                <div key={exam.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
+                <div key={exam.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3 rounded-lg bg-muted/50">
                   <div>
                     <p className="font-medium text-sm">{exam.title}</p>
                     <p className="text-xs text-muted-foreground">{exam.questions.length} questions</p>
                   </div>
-                  <Button size="sm" variant="outline" onClick={() => { setQuiz(exam); setStep("submissions"); }}>
+                  <Button size="sm" variant="outline" className="w-full sm:w-auto" onClick={() => { setQuiz(exam); setStep("submissions"); }}>
                     View Submissions
                   </Button>
                 </div>
@@ -302,28 +302,28 @@ export default function Exams() {
   // Step: Preview (admin reviews before publishing)
   if (step === "preview" && quiz) {
     return (
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
+      <div className="space-y-4 sm:space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
-            <h1 className="text-2xl font-display font-bold">{quiz.title}</h1>
-            {quiz.description && <p className="text-sm text-muted-foreground mt-1">{quiz.description}</p>}
+            <h1 className="text-xl sm:text-2xl font-display font-bold">{quiz.title}</h1>
+            {quiz.description && <p className="text-xs sm:text-sm text-muted-foreground mt-1">{quiz.description}</p>}
           </div>
           <div className="flex gap-2">
-            <Button variant="outline" onClick={() => setStep("import")}>
+            <Button variant="outline" size="sm" onClick={() => setStep("import")}>
               <ChevronLeft className="h-4 w-4 mr-1" /> Back
             </Button>
             {isAdmin && (
-              <Button onClick={handlePublishExam}>
-                Publish Exam <Send className="h-4 w-4 ml-1" />
+              <Button size="sm" onClick={handlePublishExam}>
+                Publish <Send className="h-4 w-4 ml-1" />
               </Button>
             )}
           </div>
         </div>
         <div className="space-y-4">
           {quiz.questions.map((q, i) => (
-            <Card key={q.id}>
-              <CardContent className="pt-5">
-                <div className="flex items-start justify-between">
+          <Card key={q.id}>
+              <CardContent className="pt-4 sm:pt-5">
+                <div className="flex items-start justify-between gap-2">
                   <div>
                     <p className="text-xs text-muted-foreground mb-1">Question {i + 1} • {q.type.replace("_", " ")} • {q.points} pts</p>
                     <p className="font-medium">{q.title}</p>
@@ -394,12 +394,12 @@ export default function Exams() {
           </h1>
           {available.map(exam => (
             <Card key={exam.id} className="hover:shadow-md transition-shadow">
-              <CardContent className="pt-5 flex items-center justify-between">
+              <CardContent className="pt-4 sm:pt-5 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                 <div>
                   <p className="font-semibold">{exam.title}</p>
                   <p className="text-xs text-muted-foreground">{exam.questions.length} questions • {exam.questions.reduce((s, q) => s + q.points, 0)} points</p>
                 </div>
-                <Button onClick={() => { setQuiz(exam); setCurrentQ(0); setResponses({}); }}>
+                <Button className="w-full sm:w-auto" onClick={() => { setQuiz(exam); setCurrentQ(0); setResponses({}); }}>
                   Start Exam <ChevronRight className="h-4 w-4 ml-1" />
                 </Button>
               </CardContent>
@@ -430,27 +430,27 @@ export default function Exams() {
     const isLast = currentQ === quiz.questions.length - 1;
 
     return (
-      <div className="max-w-2xl mx-auto space-y-6">
+      <div className="max-w-2xl mx-auto space-y-4 sm:space-y-6">
         <div>
-          <h1 className="text-xl font-display font-bold">{quiz.title}</h1>
-          <div className="flex items-center gap-3 mt-2">
+          <h1 className="text-lg sm:text-xl font-display font-bold">{quiz.title}</h1>
+          <div className="flex items-center gap-2 sm:gap-3 mt-2">
             <Progress value={progress} className="flex-1 h-2" />
-            <span className="text-xs text-muted-foreground">{currentQ + 1}/{quiz.questions.length}</span>
+            <span className="text-xs text-muted-foreground whitespace-nowrap">{currentQ + 1}/{quiz.questions.length}</span>
           </div>
         </div>
 
         <Card>
-          <CardContent className="pt-6 space-y-4">
-            <div className="flex items-start justify-between">
-              <p className="text-xs text-muted-foreground">Question {currentQ + 1} • {q.points} points</p>
-              {q.required && <Badge variant="outline" className="text-[9px]">Required</Badge>}
+          <CardContent className="pt-4 sm:pt-6 space-y-3 sm:space-y-4">
+            <div className="flex items-start justify-between gap-2">
+              <p className="text-xs text-muted-foreground">Q{currentQ + 1} • {q.points} pts</p>
+              {q.required && <Badge variant="outline" className="text-[9px] shrink-0">Required</Badge>}
             </div>
-            <p className="font-medium text-lg">{q.title}</p>
+            <p className="font-medium text-base sm:text-lg">{q.title}</p>
 
             {q.type === "multiple_choice" && q.options && (
               <RadioGroup value={(responses[q.id] as string) || ""} onValueChange={v => handleAnswer(q.id, v)}>
                 {q.options.map(opt => (
-                  <div key={opt} className="flex items-center gap-3 p-3 rounded-lg border hover:bg-muted/50 transition-colors">
+                  <div key={opt} className="flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 rounded-lg border hover:bg-muted/50 transition-colors">
                     <RadioGroupItem value={opt} id={`${q.id}-${opt}`} />
                     <Label htmlFor={`${q.id}-${opt}`} className="cursor-pointer flex-1">{opt}</Label>
                   </div>
@@ -461,7 +461,7 @@ export default function Exams() {
             {q.type === "checkbox" && q.options && (
               <div className="space-y-2">
                 {q.options.map(opt => (
-                  <div key={opt} className="flex items-center gap-3 p-3 rounded-lg border hover:bg-muted/50 transition-colors">
+                  <div key={opt} className="flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 rounded-lg border hover:bg-muted/50 transition-colors">
                     <Checkbox
                       checked={((responses[q.id] as string[]) || []).includes(opt)}
                       onCheckedChange={() => handleCheckboxToggle(q.id, opt)}
@@ -528,13 +528,13 @@ export default function Exams() {
   if (step === "submissions" && isAdmin && quiz) {
     const examSubs = semesterSubmissions.filter(s => s.examId === (semesterExams.find(e => e.title === quiz.title)?.id || ""));
     return (
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
+      <div className="space-y-4 sm:space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
-            <h1 className="text-2xl font-display font-bold">{quiz.title} — Submissions</h1>
-            <p className="text-sm text-muted-foreground">{examSubs.length} submissions received</p>
+            <h1 className="text-lg sm:text-2xl font-display font-bold">{quiz.title} — Submissions</h1>
+            <p className="text-xs sm:text-sm text-muted-foreground">{examSubs.length} submissions received</p>
           </div>
-          <Button variant="outline" onClick={() => { setQuiz(null); setStep("import"); }}>
+          <Button variant="outline" size="sm" onClick={() => { setQuiz(null); setStep("import"); }}>
             <ChevronLeft className="h-4 w-4 mr-1" /> Back
           </Button>
         </div>
@@ -547,7 +547,7 @@ export default function Exams() {
               const alreadyGraded = gradedExams.some(g => g.examId === sub.examId && g.studentId === sub.studentId);
               return (
                 <Card key={i} className="hover:shadow-md transition-shadow">
-                  <CardContent className="pt-5 flex items-center justify-between">
+                  <CardContent className="pt-4 sm:pt-5 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                     <div>
                       <p className="font-semibold">{sub.studentName}</p>
                       <p className="text-xs text-muted-foreground">Submitted {new Date(sub.submittedAt).toLocaleString()}</p>
@@ -576,17 +576,17 @@ export default function Exams() {
     const isLastQ = gradeStep === quiz.questions.length - 1;
 
     return (
-      <div className="max-w-2xl mx-auto space-y-6">
+      <div className="max-w-2xl mx-auto space-y-4 sm:space-y-6">
         <div>
-          <h1 className="text-xl font-display font-bold">Grading: {selectedSubmission.studentName}</h1>
-          <div className="flex items-center gap-3 mt-2">
+          <h1 className="text-lg sm:text-xl font-display font-bold">Grading: {selectedSubmission.studentName}</h1>
+          <div className="flex items-center gap-2 sm:gap-3 mt-2">
             <Progress value={((gradeStep + 1) / quiz.questions.length) * 100} className="flex-1 h-2" />
             <span className="text-xs text-muted-foreground">Q{gradeStep + 1}/{quiz.questions.length}</span>
           </div>
         </div>
 
         <Card>
-          <CardContent className="pt-6 space-y-4">
+          <CardContent className="pt-4 sm:pt-6 space-y-3 sm:space-y-4">
             <p className="text-xs text-muted-foreground">Question {gradeStep + 1} • {q.points} points max</p>
             <p className="font-medium">{q.title}</p>
 
@@ -675,8 +675,8 @@ export default function Exams() {
     const maxScore = quiz.questions.reduce((s, q) => s + q.points, 0);
 
     return (
-      <div className="max-w-2xl mx-auto space-y-6">
-        <h1 className="text-xl font-display font-bold">Review & Submit Grades</h1>
+      <div className="max-w-2xl mx-auto space-y-4 sm:space-y-6">
+        <h1 className="text-lg sm:text-xl font-display font-bold">Review & Submit Grades</h1>
         <Card>
           <CardContent className="pt-6 space-y-4">
             <div className="flex items-center justify-between">
