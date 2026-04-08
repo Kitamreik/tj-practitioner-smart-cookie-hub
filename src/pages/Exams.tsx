@@ -250,44 +250,44 @@ export default function Exams() {
   // Step: Import
   if (step === "import" && isAdmin) {
     return (
-      <div className="space-y-6">
+      <div className="space-y-4 sm:space-y-6">
         <div>
-          <h1 className="text-2xl font-display font-bold flex items-center gap-2">
-            <ClipboardList className="h-6 w-6 text-primary" /> Exam Generator
+          <h1 className="text-xl sm:text-2xl font-display font-bold flex items-center gap-2">
+            <ClipboardList className="h-5 w-5 sm:h-6 sm:w-6 text-primary" /> Exam Generator
           </h1>
-          <p className="text-sm text-muted-foreground mt-1">Import a Google Quiz JSON or load a sample to get started</p>
+          <p className="text-xs sm:text-sm text-muted-foreground mt-1">Import a Google Quiz JSON or load a sample to get started</p>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
           <Card className="border-dashed border-2 hover:border-primary/50 transition-colors cursor-pointer" onClick={() => fileInputRef.current?.click()}>
-            <CardContent className="flex flex-col items-center justify-center py-12 text-center">
-              <Upload className="h-12 w-12 text-muted-foreground mb-4" />
-              <h3 className="font-semibold text-lg">Import JSON File</h3>
-              <p className="text-sm text-muted-foreground mt-1 max-w-xs">Upload a Google Quiz export (JSON format) with questions, options, and correct answers</p>
+            <CardContent className="flex flex-col items-center justify-center py-8 sm:py-12 text-center">
+              <Upload className="h-8 w-8 sm:h-12 sm:w-12 text-muted-foreground mb-3 sm:mb-4" />
+              <h3 className="font-semibold text-base sm:text-lg">Import JSON File</h3>
+              <p className="text-xs sm:text-sm text-muted-foreground mt-1 max-w-xs">Upload a Google Quiz export (JSON format)</p>
               <input ref={fileInputRef} type="file" accept=".json" className="hidden" onChange={handleFileImport} />
             </CardContent>
           </Card>
 
           <Card className="border-dashed border-2 hover:border-primary/50 transition-colors cursor-pointer" onClick={handleLoadSample}>
-            <CardContent className="flex flex-col items-center justify-center py-12 text-center">
-              <BookOpen className="h-12 w-12 text-muted-foreground mb-4" />
-              <h3 className="font-semibold text-lg">Load Sample Quiz</h3>
-              <p className="text-sm text-muted-foreground mt-1 max-w-xs">Use a pre-built Computer Science midterm to explore the grading flow</p>
+            <CardContent className="flex flex-col items-center justify-center py-8 sm:py-12 text-center">
+              <BookOpen className="h-8 w-8 sm:h-12 sm:w-12 text-muted-foreground mb-3 sm:mb-4" />
+              <h3 className="font-semibold text-base sm:text-lg">Load Sample Quiz</h3>
+              <p className="text-xs sm:text-sm text-muted-foreground mt-1 max-w-xs">Use a pre-built Computer Science midterm</p>
             </CardContent>
           </Card>
         </div>
 
         {semesterExams.length > 0 && (
           <Card>
-            <CardHeader><CardTitle className="text-base">Published Exams</CardTitle></CardHeader>
+            <CardHeader><CardTitle className="text-sm sm:text-base">Published Exams</CardTitle></CardHeader>
             <CardContent className="space-y-2">
               {semesterExams.map(exam => (
-                <div key={exam.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
+                <div key={exam.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3 rounded-lg bg-muted/50">
                   <div>
                     <p className="font-medium text-sm">{exam.title}</p>
                     <p className="text-xs text-muted-foreground">{exam.questions.length} questions</p>
                   </div>
-                  <Button size="sm" variant="outline" onClick={() => { setQuiz(exam); setStep("submissions"); }}>
+                  <Button size="sm" variant="outline" className="w-full sm:w-auto" onClick={() => { setQuiz(exam); setStep("submissions"); }}>
                     View Submissions
                   </Button>
                 </div>
@@ -302,28 +302,28 @@ export default function Exams() {
   // Step: Preview (admin reviews before publishing)
   if (step === "preview" && quiz) {
     return (
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
+      <div className="space-y-4 sm:space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
-            <h1 className="text-2xl font-display font-bold">{quiz.title}</h1>
-            {quiz.description && <p className="text-sm text-muted-foreground mt-1">{quiz.description}</p>}
+            <h1 className="text-xl sm:text-2xl font-display font-bold">{quiz.title}</h1>
+            {quiz.description && <p className="text-xs sm:text-sm text-muted-foreground mt-1">{quiz.description}</p>}
           </div>
           <div className="flex gap-2">
-            <Button variant="outline" onClick={() => setStep("import")}>
+            <Button variant="outline" size="sm" onClick={() => setStep("import")}>
               <ChevronLeft className="h-4 w-4 mr-1" /> Back
             </Button>
             {isAdmin && (
-              <Button onClick={handlePublishExam}>
-                Publish Exam <Send className="h-4 w-4 ml-1" />
+              <Button size="sm" onClick={handlePublishExam}>
+                Publish <Send className="h-4 w-4 ml-1" />
               </Button>
             )}
           </div>
         </div>
         <div className="space-y-4">
           {quiz.questions.map((q, i) => (
-            <Card key={q.id}>
-              <CardContent className="pt-5">
-                <div className="flex items-start justify-between">
+          <Card key={q.id}>
+              <CardContent className="pt-4 sm:pt-5">
+                <div className="flex items-start justify-between gap-2">
                   <div>
                     <p className="text-xs text-muted-foreground mb-1">Question {i + 1} • {q.type.replace("_", " ")} • {q.points} pts</p>
                     <p className="font-medium">{q.title}</p>
