@@ -13,6 +13,9 @@ export default {
       },
     },
     extend: {
+      screens: {
+        xs: "480px",
+      },
       fontFamily: {
         display: ["Lexend", "sans-serif"],
         body: ["Inter", "sans-serif"],
