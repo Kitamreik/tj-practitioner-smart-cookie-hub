@@ -528,13 +528,13 @@ export default function Exams() {
   if (step === "submissions" && isAdmin && quiz) {
     const examSubs = semesterSubmissions.filter(s => s.examId === (semesterExams.find(e => e.title === quiz.title)?.id || ""));
     return (
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
+      <div className="space-y-4 sm:space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
-            <h1 className="text-2xl font-display font-bold">{quiz.title} — Submissions</h1>
-            <p className="text-sm text-muted-foreground">{examSubs.length} submissions received</p>
+            <h1 className="text-lg sm:text-2xl font-display font-bold">{quiz.title} — Submissions</h1>
+            <p className="text-xs sm:text-sm text-muted-foreground">{examSubs.length} submissions received</p>
           </div>
-          <Button variant="outline" onClick={() => { setQuiz(null); setStep("import"); }}>
+          <Button variant="outline" size="sm" onClick={() => { setQuiz(null); setStep("import"); }}>
             <ChevronLeft className="h-4 w-4 mr-1" /> Back
           </Button>
         </div>
@@ -547,7 +547,7 @@ export default function Exams() {
               const alreadyGraded = gradedExams.some(g => g.examId === sub.examId && g.studentId === sub.studentId);
               return (
                 <Card key={i} className="hover:shadow-md transition-shadow">
-                  <CardContent className="pt-5 flex items-center justify-between">
+                  <CardContent className="pt-4 sm:pt-5 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                     <div>
                       <p className="font-semibold">{sub.studentName}</p>
                       <p className="text-xs text-muted-foreground">Submitted {new Date(sub.submittedAt).toLocaleString()}</p>
@@ -576,17 +576,17 @@ export default function Exams() {
     const isLastQ = gradeStep === quiz.questions.length - 1;
 
     return (
-      <div className="max-w-2xl mx-auto space-y-6">
+      <div className="max-w-2xl mx-auto space-y-4 sm:space-y-6">
         <div>
-          <h1 className="text-xl font-display font-bold">Grading: {selectedSubmission.studentName}</h1>
-          <div className="flex items-center gap-3 mt-2">
+          <h1 className="text-lg sm:text-xl font-display font-bold">Grading: {selectedSubmission.studentName}</h1>
+          <div className="flex items-center gap-2 sm:gap-3 mt-2">
             <Progress value={((gradeStep + 1) / quiz.questions.length) * 100} className="flex-1 h-2" />
             <span className="text-xs text-muted-foreground">Q{gradeStep + 1}/{quiz.questions.length}</span>
           </div>
         </div>
 
         <Card>
-          <CardContent className="pt-6 space-y-4">
+          <CardContent className="pt-4 sm:pt-6 space-y-3 sm:space-y-4">
             <p className="text-xs text-muted-foreground">Question {gradeStep + 1} • {q.points} points max</p>
             <p className="font-medium">{q.title}</p>
 
@@ -675,8 +675,8 @@ export default function Exams() {
     const maxScore = quiz.questions.reduce((s, q) => s + q.points, 0);
 
     return (
-      <div className="max-w-2xl mx-auto space-y-6">
-        <h1 className="text-xl font-display font-bold">Review & Submit Grades</h1>
+      <div className="max-w-2xl mx-auto space-y-4 sm:space-y-6">
+        <h1 className="text-lg sm:text-xl font-display font-bold">Review & Submit Grades</h1>
         <Card>
           <CardContent className="pt-6 space-y-4">
             <div className="flex items-center justify-between">
