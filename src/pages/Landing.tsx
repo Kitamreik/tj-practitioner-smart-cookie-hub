@@ -26,34 +26,35 @@ export default function Landing() {
             <GraduationCap className="h-6 w-6 text-primary" />
             <span className="font-bold text-lg">Academic Stream</span>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
             <ThemeToggle />
-            <Button variant="outline" size="sm" onClick={() => navigate("/login")}>
+            <Button variant="outline" size="sm" className="hidden sm:inline-flex" onClick={() => navigate("/login")}>
               Sign In
             </Button>
             <Button size="sm" onClick={() => navigate("/login")}>
-              Get Started
+              <span className="sm:hidden">Sign In</span>
+              <span className="hidden sm:inline">Get Started</span>
             </Button>
           </div>
         </div>
       </header>
 
       {/* Hero */}
-      <section className="py-20 px-6">
-        <div className="max-w-3xl mx-auto text-center space-y-6">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-sm font-medium">
+      <section className="py-12 sm:py-20 px-4 sm:px-6">
+        <div className="max-w-3xl mx-auto text-center space-y-4 sm:space-y-6">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs sm:text-sm font-medium">
             <GraduationCap className="h-4 w-4" />
             Learning Management System
           </div>
-          <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-foreground">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-foreground">
             Your Academic Journey,{" "}
             <span className="text-primary">Streamlined</span>
           </h1>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Access course materials, submit assignments, engage in discussions, and track your progress — all in one place. Built for students and instructors.
+          <p className="text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto">
+            Access course materials, submit assignments, engage in discussions, and track your progress — all in one place.
           </p>
           <div className="flex items-center justify-center gap-3 pt-2">
-            <Button size="lg" onClick={() => navigate("/login")}>
+            <Button size="lg" className="w-full sm:w-auto" onClick={() => navigate("/login")}>
               Sign In to Your Account
             </Button>
           </div>
@@ -61,10 +62,10 @@ export default function Landing() {
       </section>
 
       {/* Features grid */}
-      <section className="pb-20 px-6">
+      <section className="pb-12 sm:pb-20 px-4 sm:px-6">
         <div className="max-w-5xl mx-auto">
-          <h2 className="text-2xl font-bold text-center mb-10 text-foreground">Everything You Need</h2>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <h2 className="text-xl sm:text-2xl font-bold text-center mb-6 sm:mb-10 text-foreground">Everything You Need</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
             {features.map((f) => (
               <Card key={f.title} className="border-border hover:border-primary/30 transition-colors">
                 <CardContent className="pt-6 space-y-2">
@@ -79,7 +80,7 @@ export default function Landing() {
       </section>
 
       {/* Demo accounts */}
-      <section className="pb-20 px-6">
+      <section className="pb-12 sm:pb-20 px-4 sm:px-6">
         <div className="max-w-md mx-auto">
           <Card className="border-border">
             <CardContent className="pt-6 space-y-4">

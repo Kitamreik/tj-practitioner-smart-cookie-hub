@@ -48,13 +48,13 @@ export default function Discussions() {
   };
 
   return (
-    <div className="max-w-3xl mx-auto space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="font-display text-2xl font-bold">Discussions</h1>
-          <p className="text-sm text-muted-foreground mt-1">Engage with your classmates.</p>
+    <div className="max-w-3xl mx-auto space-y-4 sm:space-y-6">
+      <div className="flex items-center justify-between gap-2">
+        <div className="min-w-0">
+          <h1 className="font-display text-xl sm:text-2xl font-bold">Discussions</h1>
+          <p className="text-xs sm:text-sm text-muted-foreground mt-1">Engage with your classmates.</p>
         </div>
-        <Button size="sm" onClick={() => setDialogOpen(true)}><Plus className="h-4 w-4 mr-1" /> New Discussion</Button>
+        <Button size="sm" className="shrink-0" onClick={() => setDialogOpen(true)}><Plus className="h-4 w-4 mr-1" /> <span className="hidden sm:inline">New Discussion</span><span className="sm:hidden">New</span></Button>
       </div>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
@@ -74,7 +74,7 @@ export default function Discussions() {
         <div className="space-y-3">
           {discussions.map((d) => (
             <Card key={d.id} className="group">
-              <CardContent className="p-5">
+              <CardContent className="p-3 sm:p-5">
                 <div className="flex items-start justify-between">
                   <div className="cursor-pointer flex-1" onClick={() => setExpandedId(expandedId === d.id ? null : d.id)}>
                     <h3 className="font-display font-semibold text-sm">{d.title}</h3>

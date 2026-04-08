@@ -55,9 +55,9 @@ export default function Grades() {
   };
 
   return (
-    <div className="max-w-5xl mx-auto space-y-6">
+    <div className="max-w-5xl mx-auto space-y-4 sm:space-y-6">
       <div>
-        <h1 className="font-display text-2xl font-bold">Grades</h1>
+        <h1 className="font-display text-xl sm:text-2xl font-bold">Grades</h1>
         <p className="text-sm text-muted-foreground mt-1">
           {isStudent ? `Your scores for ${activeSemester.name}.` : `All student scores for ${activeSemester.name}.`}
         </p>

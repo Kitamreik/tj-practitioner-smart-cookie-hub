@@ -42,11 +42,11 @@ export default function Announcements() {
   };
 
   return (
-    <div className="max-w-3xl mx-auto space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="font-display text-2xl font-bold">Announcements</h1>
-          <p className="text-sm text-muted-foreground mt-1">Stay up to date with {activeSemester.name} course news.</p>
+    <div className="max-w-3xl mx-auto space-y-4 sm:space-y-6">
+      <div className="flex items-center justify-between gap-2">
+        <div className="min-w-0">
+          <h1 className="font-display text-xl sm:text-2xl font-bold">Announcements</h1>
+          <p className="text-xs sm:text-sm text-muted-foreground mt-1">Stay up to date with {activeSemester.name} course news.</p>
         </div>
         {isAdmin && <Button size="sm" onClick={openNew}><Plus className="h-4 w-4 mr-1" /> New Announcement</Button>}
       </div>
