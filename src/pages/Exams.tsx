@@ -394,12 +394,12 @@ export default function Exams() {
           </h1>
           {available.map(exam => (
             <Card key={exam.id} className="hover:shadow-md transition-shadow">
-              <CardContent className="pt-5 flex items-center justify-between">
+              <CardContent className="pt-4 sm:pt-5 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                 <div>
                   <p className="font-semibold">{exam.title}</p>
                   <p className="text-xs text-muted-foreground">{exam.questions.length} questions • {exam.questions.reduce((s, q) => s + q.points, 0)} points</p>
                 </div>
-                <Button onClick={() => { setQuiz(exam); setCurrentQ(0); setResponses({}); }}>
+                <Button className="w-full sm:w-auto" onClick={() => { setQuiz(exam); setCurrentQ(0); setResponses({}); }}>
                   Start Exam <ChevronRight className="h-4 w-4 ml-1" />
                 </Button>
               </CardContent>
@@ -430,27 +430,27 @@ export default function Exams() {
     const isLast = currentQ === quiz.questions.length - 1;
 
     return (
-      <div className="max-w-2xl mx-auto space-y-6">
+      <div className="max-w-2xl mx-auto space-y-4 sm:space-y-6">
         <div>
-          <h1 className="text-xl font-display font-bold">{quiz.title}</h1>
-          <div className="flex items-center gap-3 mt-2">
+          <h1 className="text-lg sm:text-xl font-display font-bold">{quiz.title}</h1>
+          <div className="flex items-center gap-2 sm:gap-3 mt-2">
             <Progress value={progress} className="flex-1 h-2" />
-            <span className="text-xs text-muted-foreground">{currentQ + 1}/{quiz.questions.length}</span>
+            <span className="text-xs text-muted-foreground whitespace-nowrap">{currentQ + 1}/{quiz.questions.length}</span>
           </div>
         </div>
 
         <Card>
-          <CardContent className="pt-6 space-y-4">
-            <div className="flex items-start justify-between">
-              <p className="text-xs text-muted-foreground">Question {currentQ + 1} • {q.points} points</p>
-              {q.required && <Badge variant="outline" className="text-[9px]">Required</Badge>}
+          <CardContent className="pt-4 sm:pt-6 space-y-3 sm:space-y-4">
+            <div className="flex items-start justify-between gap-2">
+              <p className="text-xs text-muted-foreground">Q{currentQ + 1} • {q.points} pts</p>
+              {q.required && <Badge variant="outline" className="text-[9px] shrink-0">Required</Badge>}
             </div>
-            <p className="font-medium text-lg">{q.title}</p>
+            <p className="font-medium text-base sm:text-lg">{q.title}</p>
 
             {q.type === "multiple_choice" && q.options && (
               <RadioGroup value={(responses[q.id] as string) || ""} onValueChange={v => handleAnswer(q.id, v)}>
                 {q.options.map(opt => (
-                  <div key={opt} className="flex items-center gap-3 p-3 rounded-lg border hover:bg-muted/50 transition-colors">
+                  <div key={opt} className="flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 rounded-lg border hover:bg-muted/50 transition-colors">
                     <RadioGroupItem value={opt} id={`${q.id}-${opt}`} />
                     <Label htmlFor={`${q.id}-${opt}`} className="cursor-pointer flex-1">{opt}</Label>
                   </div>
@@ -461,7 +461,7 @@ export default function Exams() {
             {q.type === "checkbox" && q.options && (
               <div className="space-y-2">
                 {q.options.map(opt => (
-                  <div key={opt} className="flex items-center gap-3 p-3 rounded-lg border hover:bg-muted/50 transition-colors">
+                  <div key={opt} className="flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 rounded-lg border hover:bg-muted/50 transition-colors">
                     <Checkbox
                       checked={((responses[q.id] as string[]) || []).includes(opt)}
                       onCheckedChange={() => handleCheckboxToggle(q.id, opt)}
