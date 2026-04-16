@@ -168,15 +168,16 @@ export default function Grades() {
       </Card>
 
       {/* Submission Dialog */}
-      <Dialog open={!!submitDialog} onOpenChange={(o) => { if (!o) { setSubmitDialog(null); setSelectedFile(null); } }}>
+      <Dialog open={!!submitDialog} onOpenChange={(o) => { if (!o) { setSubmitDialog(null); setSelectedFile(null); setDriveFile(null); } }}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Submit Assignment</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <p className="text-sm text-muted-foreground">
-              Upload a file to submit your assignment. Accepted formats: PDF, images, documents.
+              Upload a file from your device or pick one from Google Drive.
             </p>
+
             <div
               className="border-2 border-dashed border-border rounded-lg p-6 text-center cursor-pointer hover:border-primary/50 transition-colors"
               onClick={() => fileInputRef.current?.click()}
@@ -189,7 +190,7 @@ export default function Grades() {
               ) : (
                 <div>
                   <Upload className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
-                  <p className="text-sm text-muted-foreground">Click to select a file</p>
+                  <p className="text-sm text-muted-foreground">Click to select a file from your device</p>
                 </div>
               )}
               <input
@@ -197,15 +198,43 @@ export default function Grades() {
                 type="file"
                 className="hidden"
                 accept=".pdf,.png,.jpg,.jpeg,.doc,.docx,.txt"
-                onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
+                onChange={(e) => { setSelectedFile(e.target.files?.[0] || null); setDriveFile(null); }}
               />
             </div>
-            <Button onClick={handleSubmit} disabled={!selectedFile} className="w-full">
+
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              <div className="flex-1 h-px bg-border" /> or <div className="flex-1 h-px bg-border" />
+            </div>
+
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full justify-start gap-2"
+              onClick={() => setDrivePickerOpen(true)}
+            >
+              <HardDrive className="h-4 w-4" />
+              {driveFile ? (
+                <span className="truncate flex-1 text-left">
+                  <CheckCircle className="inline h-3.5 w-3.5 text-success mr-1" />
+                  {driveFile.name}
+                </span>
+              ) : (
+                "Choose from Google Drive"
+              )}
+            </Button>
+
+            <Button onClick={handleSubmit} disabled={!selectedFile && !driveFile} className="w-full">
               Submit Assignment
             </Button>
           </div>
         </DialogContent>
       </Dialog>
+
+      <GoogleDrivePicker
+        open={drivePickerOpen}
+        onOpenChange={setDrivePickerOpen}
+        onPick={handleDrivePick}
+      />
     </div>
   );
 }
