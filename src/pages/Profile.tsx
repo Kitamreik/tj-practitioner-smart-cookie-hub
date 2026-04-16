@@ -7,12 +7,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
-import { User, FileText, GraduationCap, Save, TrendingUp } from "lucide-react";
+import { User, FileText, GraduationCap, Save, TrendingUp, Vibrate } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
+import { getHapticsEnabled, setHapticsEnabled, hapticTap } from "@/lib/haptics";
 
 const PROFILE_KEY = "academic-stream-profile";
 
@@ -28,6 +30,19 @@ export default function Profile() {
   // Profile editing
   const [displayName, setDisplayName] = useState(user?.name ?? "");
   const [bio, setBio] = useState("");
+
+  // Haptics preference
+  const [haptics, setHaptics] = useState(getHapticsEnabled());
+
+  const handleHapticsToggle = (enabled: boolean) => {
+    setHaptics(enabled);
+    setHapticsEnabled(enabled);
+    if (enabled) {
+      // Confirmation buzz so the user feels it working.
+      hapticTap();
+    }
+    toast.success(enabled ? "Haptic feedback enabled" : "Haptic feedback disabled");
+  };
 
   useEffect(() => {
     if (!user) return;
@@ -115,6 +130,31 @@ export default function Profile() {
           <Button onClick={handleSaveProfile} size="sm">
             <Save className="h-4 w-4 mr-1" /> Save Profile
           </Button>
+        </CardContent>
+      </Card>
+
+      {/* Preferences */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="font-display text-base flex items-center gap-2">
+            <Vibrate className="h-4 w-4 text-primary" /> Preferences
+          </CardTitle>
+          <CardDescription>Personalize how the app responds to your interactions.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-between gap-4 p-3 rounded-lg border bg-muted/30">
+            <div className="space-y-0.5 min-w-0">
+              <Label htmlFor="haptics-toggle" className="font-medium">Haptic feedback</Label>
+              <p className="text-xs text-muted-foreground">
+                Vibrate on swipes, taps, and confirmations. Mobile devices only.
+              </p>
+            </div>
+            <Switch
+              id="haptics-toggle"
+              checked={haptics}
+              onCheckedChange={handleHapticsToggle}
+            />
+          </div>
         </CardContent>
       </Card>
 

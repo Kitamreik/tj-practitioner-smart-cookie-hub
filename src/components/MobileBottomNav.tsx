@@ -7,6 +7,7 @@ import {
   Menu,
 } from "lucide-react";
 import { useState } from "react";
+import { hapticTick, hapticTap } from "@/lib/haptics";
 import { useAuth } from "@/context/AuthContext";
 import {
   Sheet,
@@ -72,6 +73,7 @@ export function MobileBottomNav() {
             <NavLink
               key={tab.url}
               to={tab.url}
+              onClick={() => { if (!isActive) hapticTick(); }}
               className={`flex flex-col items-center gap-0.5 px-2 py-1.5 rounded-md text-[10px] font-medium transition-colors ${
                 isActive
                   ? "text-primary"
@@ -85,7 +87,7 @@ export function MobileBottomNav() {
         })}
 
         {/* More menu */}
-        <Sheet open={open} onOpenChange={setOpen}>
+        <Sheet open={open} onOpenChange={(o) => { if (o) hapticTap(); setOpen(o); }}>
           <SheetTrigger asChild>
             <button
               className="flex flex-col items-center gap-0.5 px-2 py-1.5 rounded-md text-[10px] font-medium text-muted-foreground transition-colors"
@@ -105,7 +107,7 @@ export function MobileBottomNav() {
                   <NavLink
                     key={item.url}
                     to={item.url}
-                    onClick={() => setOpen(false)}
+                    onClick={() => { hapticTick(); setOpen(false); }}
                     className={`flex flex-col items-center gap-1.5 p-3 rounded-xl text-xs font-medium transition-colors ${
                       isActive
                         ? "bg-primary/10 text-primary"
