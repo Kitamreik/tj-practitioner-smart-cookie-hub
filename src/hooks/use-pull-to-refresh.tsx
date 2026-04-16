@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { hapticTap, hapticSuccess } from "@/lib/haptics";
 
 interface Options {
   onRefresh: () => void | Promise<void>;
@@ -15,6 +16,7 @@ export function usePullToRefresh({ onRefresh, threshold = 70, disabled = false }
   const [refreshing, setRefreshing] = useState(false);
   const startY = useRef<number | null>(null);
   const pulling = useRef(false);
+  const reachedThreshold = useRef(false);
 
   useEffect(() => {
     if (disabled) return;
@@ -29,8 +31,15 @@ export function usePullToRefresh({ onRefresh, threshold = 70, disabled = false }
       if (!pulling.current || startY.current === null || refreshing) return;
       const dy = e.touches[0].clientY - startY.current;
       if (dy > 0 && window.scrollY === 0) {
-        // Resistive pull
-        setPull(Math.min(dy * 0.5, threshold * 1.5));
+        const next = Math.min(dy * 0.5, threshold * 1.5);
+        // Fire a single haptic tap when the user crosses the threshold.
+        if (next >= threshold && !reachedThreshold.current) {
+          reachedThreshold.current = true;
+          hapticTap();
+        } else if (next < threshold && reachedThreshold.current) {
+          reachedThreshold.current = false;
+        }
+        setPull(next);
       }
     };
 
@@ -38,10 +47,12 @@ export function usePullToRefresh({ onRefresh, threshold = 70, disabled = false }
       if (!pulling.current) return;
       pulling.current = false;
       startY.current = null;
+      reachedThreshold.current = false;
       if (pull >= threshold && !refreshing) {
         setRefreshing(true);
         try {
           await onRefresh();
+          hapticSuccess();
         } finally {
           setRefreshing(false);
           setPull(0);
