@@ -16,6 +16,7 @@ export function usePullToRefresh({ onRefresh, threshold = 70, disabled = false }
   const [refreshing, setRefreshing] = useState(false);
   const startY = useRef<number | null>(null);
   const pulling = useRef(false);
+  const reachedThreshold = useRef(false);
 
   useEffect(() => {
     if (disabled) return;
@@ -25,8 +26,6 @@ export function usePullToRefresh({ onRefresh, threshold = 70, disabled = false }
       startY.current = e.touches[0].clientY;
       pulling.current = true;
     };
-
-    const reachedThreshold = useRef(false);
 
     const handleTouchMove = (e: TouchEvent) => {
       if (!pulling.current || startY.current === null || refreshing) return;
