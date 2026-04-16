@@ -7,12 +7,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
-import { User, FileText, GraduationCap, Save, TrendingUp } from "lucide-react";
+import { User, FileText, GraduationCap, Save, TrendingUp, Vibrate } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
+import { getHapticsEnabled, setHapticsEnabled, hapticTap } from "@/lib/haptics";
 
 const PROFILE_KEY = "academic-stream-profile";
 
