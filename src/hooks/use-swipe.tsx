@@ -1,5 +1,5 @@
 import { useRef, TouchEvent } from "react";
-
+import { hapticTick } from "@/lib/haptics";
 interface SwipeHandlers {
   onSwipeLeft?: () => void;
   onSwipeRight?: () => void;
@@ -32,6 +32,7 @@ export function useSwipe({ onSwipeLeft, onSwipeRight, threshold = 50 }: SwipeHan
       return;
     }
     if (Math.abs(dx) > threshold) {
+      hapticTick();
       if (dx < 0) onSwipeLeft?.();
       else onSwipeRight?.();
     }
