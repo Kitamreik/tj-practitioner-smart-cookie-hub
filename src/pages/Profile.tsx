@@ -133,6 +133,31 @@ export default function Profile() {
         </CardContent>
       </Card>
 
+      {/* Preferences */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="font-display text-base flex items-center gap-2">
+            <Vibrate className="h-4 w-4 text-primary" /> Preferences
+          </CardTitle>
+          <CardDescription>Personalize how the app responds to your interactions.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-between gap-4 p-3 rounded-lg border bg-muted/30">
+            <div className="space-y-0.5 min-w-0">
+              <Label htmlFor="haptics-toggle" className="font-medium">Haptic feedback</Label>
+              <p className="text-xs text-muted-foreground">
+                Vibrate on swipes, taps, and confirmations. Mobile devices only.
+              </p>
+            </div>
+            <Switch
+              id="haptics-toggle"
+              checked={haptics}
+              onCheckedChange={handleHapticsToggle}
+            />
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Grade Summary */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <Card>
