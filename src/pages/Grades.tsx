@@ -11,10 +11,11 @@ import {
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
-import { Upload, FileText, CheckCircle } from "lucide-react";
+import { Upload, FileText, CheckCircle, HardDrive } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { FilePreview } from "@/components/FilePreview";
+import { GoogleDrivePicker, DriveFile } from "@/components/GoogleDrivePicker";
 
 export default function Grades() {
   const { students, assignments, grades, submissions, addSubmission } = useLMS();
@@ -23,6 +24,8 @@ export default function Grades() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [submitDialog, setSubmitDialog] = useState<{ assignmentId: string } | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [drivePickerOpen, setDrivePickerOpen] = useState(false);
+  const [driveFile, setDriveFile] = useState<DriveFile | null>(null);
 
   const filteredAssignments = assignments.filter(a => a.semesterId === activeSemester.id);
 
@@ -42,16 +45,33 @@ export default function Grades() {
     : null;
 
   const handleSubmit = () => {
-    if (!selectedFile || !submitDialog || !myStudentId) return;
-    addSubmission({
-      studentId: myStudentId,
-      assignmentId: submitDialog.assignmentId,
-      fileName: selectedFile.name,
-      fileUrl: URL.createObjectURL(selectedFile),
-    });
+    if (!submitDialog || !myStudentId) return;
+    if (selectedFile) {
+      addSubmission({
+        studentId: myStudentId,
+        assignmentId: submitDialog.assignmentId,
+        fileName: selectedFile.name,
+        fileUrl: URL.createObjectURL(selectedFile),
+      });
+    } else if (driveFile) {
+      addSubmission({
+        studentId: myStudentId,
+        assignmentId: submitDialog.assignmentId,
+        fileName: `${driveFile.name} (Google Drive)`,
+        fileUrl: `https://drive.google.com/file/d/${driveFile.id}/view`,
+      });
+    } else {
+      return;
+    }
     toast.success("Assignment submitted successfully!");
     setSelectedFile(null);
+    setDriveFile(null);
     setSubmitDialog(null);
+  };
+
+  const handleDrivePick = (file: DriveFile) => {
+    setDriveFile(file);
+    setSelectedFile(null);
   };
 
   return (
