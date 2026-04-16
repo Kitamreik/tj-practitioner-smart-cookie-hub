@@ -31,6 +31,19 @@ export default function Profile() {
   const [displayName, setDisplayName] = useState(user?.name ?? "");
   const [bio, setBio] = useState("");
 
+  // Haptics preference
+  const [haptics, setHaptics] = useState(getHapticsEnabled());
+
+  const handleHapticsToggle = (enabled: boolean) => {
+    setHaptics(enabled);
+    setHapticsEnabled(enabled);
+    if (enabled) {
+      // Confirmation buzz so the user feels it working.
+      hapticTap();
+    }
+    toast.success(enabled ? "Haptic feedback enabled" : "Haptic feedback disabled");
+  };
+
   useEffect(() => {
     if (!user) return;
     try {
