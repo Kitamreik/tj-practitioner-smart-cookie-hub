@@ -11,10 +11,11 @@ import {
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
-import { Upload, FileText, CheckCircle } from "lucide-react";
+import { Upload, FileText, CheckCircle, HardDrive } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { FilePreview } from "@/components/FilePreview";
+import { GoogleDrivePicker, DriveFile } from "@/components/GoogleDrivePicker";
 
 export default function Grades() {
   const { students, assignments, grades, submissions, addSubmission } = useLMS();
@@ -23,6 +24,8 @@ export default function Grades() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [submitDialog, setSubmitDialog] = useState<{ assignmentId: string } | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [drivePickerOpen, setDrivePickerOpen] = useState(false);
+  const [driveFile, setDriveFile] = useState<DriveFile | null>(null);
 
   const filteredAssignments = assignments.filter(a => a.semesterId === activeSemester.id);
 
@@ -42,16 +45,33 @@ export default function Grades() {
     : null;
 
   const handleSubmit = () => {
-    if (!selectedFile || !submitDialog || !myStudentId) return;
-    addSubmission({
-      studentId: myStudentId,
-      assignmentId: submitDialog.assignmentId,
-      fileName: selectedFile.name,
-      fileUrl: URL.createObjectURL(selectedFile),
-    });
+    if (!submitDialog || !myStudentId) return;
+    if (selectedFile) {
+      addSubmission({
+        studentId: myStudentId,
+        assignmentId: submitDialog.assignmentId,
+        fileName: selectedFile.name,
+        fileUrl: URL.createObjectURL(selectedFile),
+      });
+    } else if (driveFile) {
+      addSubmission({
+        studentId: myStudentId,
+        assignmentId: submitDialog.assignmentId,
+        fileName: `${driveFile.name} (Google Drive)`,
+        fileUrl: `https://drive.google.com/file/d/${driveFile.id}/view`,
+      });
+    } else {
+      return;
+    }
     toast.success("Assignment submitted successfully!");
     setSelectedFile(null);
+    setDriveFile(null);
     setSubmitDialog(null);
+  };
+
+  const handleDrivePick = (file: DriveFile) => {
+    setDriveFile(file);
+    setSelectedFile(null);
   };
 
   return (
@@ -148,15 +168,16 @@ export default function Grades() {
       </Card>
 
       {/* Submission Dialog */}
-      <Dialog open={!!submitDialog} onOpenChange={(o) => { if (!o) { setSubmitDialog(null); setSelectedFile(null); } }}>
+      <Dialog open={!!submitDialog} onOpenChange={(o) => { if (!o) { setSubmitDialog(null); setSelectedFile(null); setDriveFile(null); } }}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Submit Assignment</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <p className="text-sm text-muted-foreground">
-              Upload a file to submit your assignment. Accepted formats: PDF, images, documents.
+              Upload a file from your device or pick one from Google Drive.
             </p>
+
             <div
               className="border-2 border-dashed border-border rounded-lg p-6 text-center cursor-pointer hover:border-primary/50 transition-colors"
               onClick={() => fileInputRef.current?.click()}
@@ -169,7 +190,7 @@ export default function Grades() {
               ) : (
                 <div>
                   <Upload className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
-                  <p className="text-sm text-muted-foreground">Click to select a file</p>
+                  <p className="text-sm text-muted-foreground">Click to select a file from your device</p>
                 </div>
               )}
               <input
@@ -177,15 +198,43 @@ export default function Grades() {
                 type="file"
                 className="hidden"
                 accept=".pdf,.png,.jpg,.jpeg,.doc,.docx,.txt"
-                onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
+                onChange={(e) => { setSelectedFile(e.target.files?.[0] || null); setDriveFile(null); }}
               />
             </div>
-            <Button onClick={handleSubmit} disabled={!selectedFile} className="w-full">
+
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              <div className="flex-1 h-px bg-border" /> or <div className="flex-1 h-px bg-border" />
+            </div>
+
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full justify-start gap-2"
+              onClick={() => setDrivePickerOpen(true)}
+            >
+              <HardDrive className="h-4 w-4" />
+              {driveFile ? (
+                <span className="truncate flex-1 text-left">
+                  <CheckCircle className="inline h-3.5 w-3.5 text-success mr-1" />
+                  {driveFile.name}
+                </span>
+              ) : (
+                "Choose from Google Drive"
+              )}
+            </Button>
+
+            <Button onClick={handleSubmit} disabled={!selectedFile && !driveFile} className="w-full">
               Submit Assignment
             </Button>
           </div>
         </DialogContent>
       </Dialog>
+
+      <GoogleDrivePicker
+        open={drivePickerOpen}
+        onOpenChange={setDrivePickerOpen}
+        onPick={handleDrivePick}
+      />
     </div>
   );
 }

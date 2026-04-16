@@ -6,6 +6,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BookOpen, Megaphone, MessageSquare, GraduationCap, Clock } from "lucide-react";
 import { format } from "date-fns";
 import { Link } from "react-router-dom";
+import { usePullToRefresh, PullToRefreshIndicator } from "@/hooks/use-pull-to-refresh";
+import { toast } from "sonner";
 
 export default function Dashboard() {
   const { topics, announcements, discussions, assignments, grades } = useLMS();
@@ -35,8 +37,16 @@ export default function Dashboard() {
     { label: "Turn-in Rate", value: `${turnInRate}%`, icon: GraduationCap, color: "text-success" },
   ];
 
+  const { pull, refreshing, threshold } = usePullToRefresh({
+    onRefresh: async () => {
+      await new Promise((r) => setTimeout(r, 600));
+      toast.success("Dashboard refreshed");
+    },
+  });
+
   return (
     <div className="max-w-5xl mx-auto space-y-6 sm:space-y-8">
+      <PullToRefreshIndicator pull={pull} refreshing={refreshing} threshold={threshold} />
       <div>
         <h1 className="font-display text-xl sm:text-2xl font-bold">Dashboard</h1>
         <p className="text-muted-foreground text-xs sm:text-sm mt-1">Welcome back, {user?.name} — {activeSemester.name} overview.</p>

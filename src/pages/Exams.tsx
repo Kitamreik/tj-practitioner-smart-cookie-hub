@@ -11,6 +11,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
+import { useSwipe } from "@/hooks/use-swipe";
 import {
   FileUp, ChevronRight, ChevronLeft, Check, Send,
   ClipboardList, Star, MessageCircle, Upload, BookOpen,
@@ -429,6 +430,11 @@ export default function Exams() {
     const q = quiz.questions[currentQ];
     const isLast = currentQ === quiz.questions.length - 1;
 
+    const swipe = useSwipe({
+      onSwipeLeft: () => { if (!isLast) setCurrentQ(c => c + 1); },
+      onSwipeRight: () => { if (currentQ > 0) setCurrentQ(c => c - 1); },
+    });
+
     return (
       <div className="max-w-2xl mx-auto space-y-4 sm:space-y-6">
         <div>
@@ -437,9 +443,12 @@ export default function Exams() {
             <Progress value={progress} className="flex-1 h-2" />
             <span className="text-xs text-muted-foreground whitespace-nowrap">{currentQ + 1}/{quiz.questions.length}</span>
           </div>
+          <p className="md:hidden text-[10px] text-muted-foreground text-center mt-2">
+            Swipe left/right to navigate questions
+          </p>
         </div>
 
-        <Card>
+        <Card {...swipe} className="touch-pan-y select-none">
           <CardContent className="pt-4 sm:pt-6 space-y-3 sm:space-y-4">
             <div className="flex items-start justify-between gap-2">
               <p className="text-xs text-muted-foreground">Q{currentQ + 1} • {q.points} pts</p>

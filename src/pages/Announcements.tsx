@@ -12,6 +12,8 @@ import {
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Plus, Trash2, Pencil } from "lucide-react";
 import { format } from "date-fns";
+import { usePullToRefresh, PullToRefreshIndicator } from "@/hooks/use-pull-to-refresh";
+import { toast } from "sonner";
 
 export default function Announcements() {
   const { announcements, addAnnouncement, updateAnnouncement, deleteAnnouncement } = useLMS();
@@ -41,8 +43,16 @@ export default function Announcements() {
     setDialogOpen(false);
   };
 
+  const { pull, refreshing, threshold } = usePullToRefresh({
+    onRefresh: async () => {
+      await new Promise((r) => setTimeout(r, 600));
+      toast.success("Announcements refreshed");
+    },
+  });
+
   return (
     <div className="max-w-3xl mx-auto space-y-4 sm:space-y-6">
+      <PullToRefreshIndicator pull={pull} refreshing={refreshing} threshold={threshold} />
       <div className="flex items-center justify-between gap-2">
         <div className="min-w-0">
           <h1 className="font-display text-xl sm:text-2xl font-bold">Announcements</h1>
