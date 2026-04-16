@@ -7,6 +7,7 @@ import {
   Menu,
 } from "lucide-react";
 import { useState } from "react";
+import { hapticTick, hapticTap } from "@/lib/haptics";
 import { useAuth } from "@/context/AuthContext";
 import {
   Sheet,
