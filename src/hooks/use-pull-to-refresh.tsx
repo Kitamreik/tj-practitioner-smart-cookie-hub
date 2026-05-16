@@ -86,7 +86,7 @@ export function PullToRefreshIndicator({ pull, refreshing, threshold }: Indicato
   const progress = Math.min(pull / threshold, 1);
   return (
     <div
-      className="md:hidden fixed top-0 inset-x-0 flex items-center justify-center pointer-events-none z-40 transition-transform"
+      className="lg:hidden fixed top-0 inset-x-0 flex items-center justify-center pointer-events-none z-40 transition-transform"
       style={{ transform: `translateY(${refreshing ? 16 : Math.min(pull - 10, threshold)}px)` }}
     >
       <div className="rounded-full bg-card border border-border shadow-md p-2">
