@@ -5,6 +5,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { LMSProvider } from "@/context/LMSContext";
+import { ChatProvider } from "@/context/ChatContext";
 import { AuthProvider, useAuth } from "@/context/AuthContext";
 import { SemesterProvider } from "@/context/SemesterContext";
 import { AppLayout } from "@/components/AppLayout";
@@ -25,6 +26,7 @@ import CalendarView from "./pages/CalendarView";
 import Webmaster from "./pages/Webmaster";
 import FileVault from "./pages/FileVault";
 import Exams from "./pages/Exams";
+import Chat from "./pages/Chat";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -55,6 +57,7 @@ function AppRoutes() {
   return (
     <SemesterProvider>
       <LMSProvider>
+        <ChatProvider>
         <Routes>
           {/* Public routes */}
           <Route path="/" element={user ? <Navigate to="/dashboard" replace /> : <Landing />} />
@@ -103,6 +106,11 @@ function AppRoutes() {
               <AppLayout><Exams /></AppLayout>
             </ProtectedRoute>
           } />
+          <Route path="/chat" element={
+            <ProtectedRoute>
+              <AppLayout><Chat /></AppLayout>
+            </ProtectedRoute>
+          } />
           <Route path="/notifications" element={
             <ProtectedRoute>
               <AppLayout><NotificationPreferences /></AppLayout>
@@ -130,6 +138,7 @@ function AppRoutes() {
           } />
           <Route path="*" element={<NotFound />} />
         </Routes>
+        </ChatProvider>
       </LMSProvider>
     </SemesterProvider>
   );

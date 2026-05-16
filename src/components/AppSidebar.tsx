@@ -15,6 +15,7 @@ import {
   FileText,
   FolderOpen,
   ClipboardList,
+  MessageCircle,
 } from "lucide-react";
 import {
   Sidebar,
@@ -47,6 +48,7 @@ const mainNav = [
   { title: "Calendar", url: "/calendar", icon: Calendar },
   { title: "File Vault", url: "/vault", icon: FolderOpen },
   { title: "Exams", url: "/exams", icon: ClipboardList },
+  { title: "Messages", url: "/chat", icon: MessageCircle },
   { title: "Notifications", url: "/notifications", icon: Bell },
   { title: "My Profile", url: "/profile", icon: User },
 ];
