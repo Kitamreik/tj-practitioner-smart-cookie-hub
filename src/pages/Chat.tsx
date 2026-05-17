@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useAuth } from "@/context/AuthContext";
-import { useChat } from "@/context/ChatContext";
+import { useChat, THREAD_TAGS, type ThreadTag } from "@/context/ChatContext";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,15 +16,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
-  MessageCircle,
-  Send,
-  User as UserIcon,
-  GraduationCap,
-  Check,
-  CheckCheck,
-  Lightbulb,
-  Search,
-  X,
+  MessageCircle, Send, User as UserIcon, GraduationCap,
+  Check, CheckCheck, Lightbulb, Search, X, Tag as TagIcon,
 } from "lucide-react";
 
 function formatTime(iso: string) {
@@ -54,6 +48,8 @@ export default function Chat() {
     markThreadRead,
     unreadCountForThread,
     messages: allMessages,
+    getThreadTag,
+    setThreadTag,
   } = useChat();
 
   const allUsers = useMemo(() => getAllUsers(), [getAllUsers]);
