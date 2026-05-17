@@ -235,6 +235,9 @@ export default function Chat() {
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium truncate">{s.name}</p>
                         <p className="text-[11px] text-muted-foreground truncate">{s.email}</p>
+                        <Badge variant="outline" className="mt-1 h-4 px-1.5 text-[9px] gap-0.5 font-normal">
+                          <TagIcon className="h-2.5 w-2.5" />{getThreadTag(s.id)}
+                        </Badge>
                       </div>
                       {unread > 0 && (
                         <Badge className="h-5 min-w-5 px-1.5 text-[10px]">{unread}</Badge>
