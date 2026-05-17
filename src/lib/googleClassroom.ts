@@ -91,7 +91,7 @@ export interface GCourseWork {
   id: string; courseId: string; title: string; description?: string;
   dueDate?: { year: number; month: number; day: number };
   dueTime?: { hours?: number; minutes?: number };
-  maxPoints?: number; alternateLink?: string; workType?: string;
+  maxPoints?: number; alternateLink?: string; workType?: string; topicId?: string;
 }
 export interface GAnnouncement { id: string; courseId: string; text: string; creationTime: string; alternateLink?: string; }
 export interface GTopic { topicId: string; courseId: string; name: string; }
