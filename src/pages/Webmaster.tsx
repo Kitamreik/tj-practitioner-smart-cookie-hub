@@ -13,8 +13,9 @@ import { toast } from "sonner";
 import {
   Users, Pencil, Trash2, Mail, Search, Eye, EyeOff,
   Shield, ShieldCheck, GraduationCap, UserCog, Clock, Activity,
-  Plus, LogIn, LogOut, UserPlus, RefreshCw,
+  Plus, LogIn, LogOut, UserPlus, RefreshCw, Cloud,
 } from "lucide-react";
+import GoogleClassroomImport from "@/components/GoogleClassroomImport";
 
 function RoleIcon({ role }: { role: UserRole }) {
   switch (role) {
@@ -235,7 +236,13 @@ export default function Webmaster() {
         <TabsList>
           <TabsTrigger value="users" className="gap-1.5"><Users className="h-3.5 w-3.5" /> Users</TabsTrigger>
           <TabsTrigger value="activity" className="gap-1.5"><Activity className="h-3.5 w-3.5" /> Activity Log</TabsTrigger>
+          <TabsTrigger value="import" className="gap-1.5"><Cloud className="h-3.5 w-3.5" /> Import</TabsTrigger>
         </TabsList>
+
+        <TabsContent value="import" className="mt-4 space-y-4">
+          <GoogleClassroomImport />
+        </TabsContent>
+
 
         <TabsContent value="users" className="space-y-4 mt-4">
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
