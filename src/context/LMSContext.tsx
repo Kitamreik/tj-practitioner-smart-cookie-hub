@@ -134,6 +134,11 @@ interface LMSContextType extends LMSState {
   deleteVaultFile: (id: string) => void;
   reorderTopics: (semesterId: string, fromIndex: number, toIndex: number) => void;
   reorderContent: (topicId: string, fromIndex: number, toIndex: number) => void;
+  bulkImport: (data: {
+    topics?: Omit<Topic, "id" | "createdAt">[];
+    assignments?: Omit<Assignment, "id">[];
+    announcements?: Omit<Announcement, "id" | "createdAt">[];
+  }) => { topics: number; assignments: number; announcements: number };
 }
 
 const uid = () => crypto.randomUUID();
@@ -451,6 +456,31 @@ export function LMSProvider({ children }: { children: React.ReactNode }) {
     }));
   }, [update]);
 
+  const bulkImport = useCallback((data: {
+    topics?: Omit<Topic, "id" | "createdAt">[];
+    assignments?: Omit<Assignment, "id">[];
+    announcements?: Omit<Announcement, "id" | "createdAt">[];
+  }) => {
+    const newTopics: Topic[] = (data.topics ?? []).map(t => ({ ...t, id: uid(), createdAt: now() }));
+    const newAssignments: Assignment[] = (data.assignments ?? []).map(a => ({ ...a, id: uid() }));
+    const newAnnouncements: Announcement[] = (data.announcements ?? []).map(a => ({ ...a, id: uid(), createdAt: now() }));
+    update(s => ({
+      ...s,
+      topics: [...s.topics, ...newTopics],
+      assignments: [...s.assignments, ...newAssignments],
+      announcements: [...newAnnouncements, ...s.announcements],
+      grades: [
+        ...s.grades,
+        ...newAssignments.flatMap(a =>
+          s.students.map(st => ({
+            id: uid(), studentId: st.id, assignmentId: a.id, score: null, turnedIn: false,
+          }))
+        ),
+      ],
+    }));
+    return { topics: newTopics.length, assignments: newAssignments.length, announcements: newAnnouncements.length };
+  }, [update]);
+
   return (
     <LMSContext.Provider
       value={{
@@ -463,6 +493,7 @@ export function LMSProvider({ children }: { children: React.ReactNode }) {
         addNotification, markNotificationRead, clearNotifications,
         addVaultFile, deleteVaultFile,
         reorderTopics, reorderContent,
+        bulkImport,
       }}
     >
       {children}
