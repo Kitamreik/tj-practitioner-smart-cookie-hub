@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useAuth } from "@/context/AuthContext";
-import { useChat } from "@/context/ChatContext";
+import { useChat, THREAD_TAGS, type ThreadTag } from "@/context/ChatContext";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,15 +16,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
-  MessageCircle,
-  Send,
-  User as UserIcon,
-  GraduationCap,
-  Check,
-  CheckCheck,
-  Lightbulb,
-  Search,
-  X,
+  MessageCircle, Send, User as UserIcon, GraduationCap,
+  Check, CheckCheck, Lightbulb, Search, X, Tag as TagIcon,
 } from "lucide-react";
 
 function formatTime(iso: string) {
@@ -54,6 +48,8 @@ export default function Chat() {
     markThreadRead,
     unreadCountForThread,
     messages: allMessages,
+    getThreadTag,
+    setThreadTag,
   } = useChat();
 
   const allUsers = useMemo(() => getAllUsers(), [getAllUsers]);
@@ -239,6 +235,9 @@ export default function Chat() {
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium truncate">{s.name}</p>
                         <p className="text-[11px] text-muted-foreground truncate">{s.email}</p>
+                        <Badge variant="outline" className="mt-1 h-4 px-1.5 text-[9px] gap-0.5 font-normal">
+                          <TagIcon className="h-2.5 w-2.5" />{getThreadTag(s.id)}
+                        </Badge>
                       </div>
                       {unread > 0 && (
                         <Badge className="h-5 min-w-5 px-1.5 text-[10px]">{unread}</Badge>
@@ -261,7 +260,7 @@ export default function Chat() {
                 <UserIcon className="h-5 w-5 text-primary" />
               )}
             </div>
-            <div className="min-w-0">
+            <div className="min-w-0 flex-1">
               <p className="font-medium text-sm truncate">
                 {counterpart?.name ?? (isStudent ? "Instructor" : "Select a student")}
               </p>
@@ -269,6 +268,28 @@ export default function Chat() {
                 {counterpart?.email ?? ""}
               </p>
             </div>
+            {activeThreadId && (
+              isAdmin ? (
+                <Select
+                  value={getThreadTag(activeThreadId)}
+                  onValueChange={(v) => setThreadTag(activeThreadId, v as ThreadTag)}
+                >
+                  <SelectTrigger className="h-8 w-[150px] text-xs shrink-0" aria-label="Conversation topic">
+                    <TagIcon className="h-3 w-3 mr-1 text-muted-foreground" />
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {THREAD_TAGS.map((t) => (
+                      <SelectItem key={t} value={t} className="text-xs">{t}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              ) : (
+                <Badge variant="outline" className="gap-1 text-[10px] shrink-0">
+                  <TagIcon className="h-3 w-3" />{getThreadTag(activeThreadId)}
+                </Badge>
+              )
+            )}
           </div>
 
           <div ref={scrollerRef} className="flex-1 overflow-y-auto p-4 space-y-3 bg-muted/20">
