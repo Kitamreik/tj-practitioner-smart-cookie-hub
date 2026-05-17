@@ -8,8 +8,25 @@ export interface ChatMessage {
   fromRole: "student" | "admin";
   body: string;
   createdAt: string;
-  readBy: string[]; // userIds that have read it
+  readBy: string[];
 }
+
+// Common graduate-level inquiry categories used as thread tags.
+export const THREAD_TAGS = [
+  "General",
+  "Office Hours",
+  "Assignment Help",
+  "Extension Request",
+  "Grade Review",
+  "Research / Thesis",
+  "Recommendation Letter",
+  "Reading / Resources",
+  "Conference / Publication",
+  "Course Prerequisite",
+  "Accommodation",
+  "Administrative",
+] as const;
+export type ThreadTag = (typeof THREAD_TAGS)[number];
 
 interface ChatContextType {
   messages: ChatMessage[];
@@ -21,34 +38,58 @@ interface ChatContextType {
   ) => void;
   markThreadRead: (threadId: string, userId: string) => void;
   unreadCountForThread: (threadId: string, userId: string) => number;
+  getThreadTag: (threadId: string) => ThreadTag;
+  setThreadTag: (threadId: string, tag: ThreadTag) => void;
+  threadTags: Record<string, ThreadTag>;
 }
 
 const STORAGE_KEY = "academic-stream-chat";
 const uid = () => crypto.randomUUID();
 const now = () => new Date().toISOString();
 
-function load(): ChatMessage[] {
+interface PersistShape {
+  messages: ChatMessage[];
+  threadTags: Record<string, ThreadTag>;
+}
+
+function load(): PersistShape {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) return JSON.parse(raw);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) return { messages: parsed, threadTags: {} }; // old format
+      return {
+        messages: Array.isArray(parsed.messages) ? parsed.messages : [],
+        threadTags: parsed.threadTags ?? {},
+      };
+    }
   } catch {}
-  return [];
+  return { messages: [], threadTags: {} };
 }
 
 const ChatContext = createContext<ChatContextType | null>(null);
 
 export function ChatProvider({ children }: { children: React.ReactNode }) {
-  const [messages, setMessages] = useState<ChatMessage[]>(load);
+  const initial = load();
+  const [messages, setMessages] = useState<ChatMessage[]>(initial.messages);
+  const [threadTags, setThreadTags] = useState<Record<string, ThreadTag>>(initial.threadTags);
 
-  // Persist + sync across tabs (so instructor & student "see" each other in two tabs).
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(messages));
-  }, [messages]);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ messages, threadTags }));
+  }, [messages, threadTags]);
 
   useEffect(() => {
     const onStorage = (e: StorageEvent) => {
       if (e.key === STORAGE_KEY && e.newValue) {
-        try { setMessages(JSON.parse(e.newValue)); } catch {}
+        try {
+          const parsed = JSON.parse(e.newValue);
+          if (Array.isArray(parsed)) {
+            setMessages(parsed);
+          } else {
+            setMessages(parsed.messages ?? []);
+            setThreadTags(parsed.threadTags ?? {});
+          }
+        } catch {}
       }
     };
     window.addEventListener("storage", onStorage);
@@ -97,9 +138,27 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
     [messages],
   );
 
+  const getThreadTag = useCallback(
+    (threadId: string): ThreadTag => threadTags[threadId] ?? "General",
+    [threadTags],
+  );
+
+  const setThreadTag = useCallback((threadId: string, tag: ThreadTag) => {
+    setThreadTags((prev) => ({ ...prev, [threadId]: tag }));
+  }, []);
+
   return (
     <ChatContext.Provider
-      value={{ messages, threadMessages, sendMessage, markThreadRead, unreadCountForThread }}
+      value={{
+        messages,
+        threadMessages,
+        sendMessage,
+        markThreadRead,
+        unreadCountForThread,
+        getThreadTag,
+        setThreadTag,
+        threadTags,
+      }}
     >
       {children}
     </ChatContext.Provider>
