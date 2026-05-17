@@ -260,7 +260,7 @@ export default function Chat() {
                 <UserIcon className="h-5 w-5 text-primary" />
               )}
             </div>
-            <div className="min-w-0">
+            <div className="min-w-0 flex-1">
               <p className="font-medium text-sm truncate">
                 {counterpart?.name ?? (isStudent ? "Instructor" : "Select a student")}
               </p>
@@ -268,6 +268,28 @@ export default function Chat() {
                 {counterpart?.email ?? ""}
               </p>
             </div>
+            {activeThreadId && (
+              isAdmin ? (
+                <Select
+                  value={getThreadTag(activeThreadId)}
+                  onValueChange={(v) => setThreadTag(activeThreadId, v as ThreadTag)}
+                >
+                  <SelectTrigger className="h-8 w-[150px] text-xs shrink-0" aria-label="Conversation topic">
+                    <TagIcon className="h-3 w-3 mr-1 text-muted-foreground" />
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {THREAD_TAGS.map((t) => (
+                      <SelectItem key={t} value={t} className="text-xs">{t}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              ) : (
+                <Badge variant="outline" className="gap-1 text-[10px] shrink-0">
+                  <TagIcon className="h-3 w-3" />{getThreadTag(activeThreadId)}
+                </Badge>
+              )
+            )}
           </div>
 
           <div ref={scrollerRef} className="flex-1 overflow-y-auto p-4 space-y-3 bg-muted/20">
