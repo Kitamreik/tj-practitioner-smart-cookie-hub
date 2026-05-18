@@ -62,6 +62,7 @@ export interface Assignment {
   title: string;
   dueDate: string;
   maxScore: number;
+  externalId?: string;
 }
 
 export interface Submission {
