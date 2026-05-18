@@ -17,6 +17,8 @@ export interface Topic {
   description: string;
   content: ContentItem[];
   createdAt: string;
+  /** Stable external identifier (e.g. "gclassroom:topic:<id>") used for re-import dedup. */
+  externalId?: string;
 }
 
 export interface Announcement {
@@ -25,6 +27,7 @@ export interface Announcement {
   title: string;
   body: string;
   createdAt: string;
+  externalId?: string;
 }
 
 export interface DiscussionPost {
