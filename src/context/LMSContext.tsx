@@ -138,11 +138,43 @@ interface LMSContextType extends LMSState {
   deleteVaultFile: (id: string) => void;
   reorderTopics: (semesterId: string, fromIndex: number, toIndex: number) => void;
   reorderContent: (topicId: string, fromIndex: number, toIndex: number) => void;
-  bulkImport: (data: {
-    topics?: Omit<Topic, "id" | "createdAt">[];
-    assignments?: Omit<Assignment, "id">[];
-    announcements?: Omit<Announcement, "id" | "createdAt">[];
-  }) => { topics: number; assignments: number; announcements: number };
+  bulkImport: (plan: ImportPlan, mode: ImportMode) => ImportResult;
+}
+
+export type ImportMode = "merge" | "overwrite";
+
+export interface ImportPlan {
+  semesterId: string;
+  /** Topics keyed by an external sourceKey (e.g. Classroom topicId or a fallback). */
+  topics: Array<{
+    sourceKey: string;
+    title: string;
+    description: string;
+    externalId: string;
+  }>;
+  assignments: Array<{
+    sourceKey: string;
+    /** Refers to ImportPlan.topics[].sourceKey. If missing/unknown, falls back to fallbackTopicSourceKey. */
+    topicSourceKey?: string;
+    title: string;
+    dueDate: string;
+    maxScore: number;
+    externalId: string;
+  }>;
+  announcements: Array<{
+    sourceKey: string;
+    title: string;
+    body: string;
+    externalId: string;
+  }>;
+  /** Optional sourceKey of a fallback topic for assignments without a topic. */
+  fallbackTopicSourceKey?: string;
+}
+
+export interface ImportResult {
+  topics: { created: number; updated: number; skipped: number };
+  assignments: { created: number; updated: number; skipped: number };
+  announcements: { created: number; updated: number; skipped: number };
 }
 
 const uid = () => crypto.randomUUID();
