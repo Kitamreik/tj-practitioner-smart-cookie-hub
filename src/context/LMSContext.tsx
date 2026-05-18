@@ -492,30 +492,140 @@ export function LMSProvider({ children }: { children: React.ReactNode }) {
     }));
   }, [update]);
 
-  const bulkImport = useCallback((data: {
-    topics?: Omit<Topic, "id" | "createdAt">[];
-    assignments?: Omit<Assignment, "id">[];
-    announcements?: Omit<Announcement, "id" | "createdAt">[];
-  }) => {
-    const newTopics: Topic[] = (data.topics ?? []).map(t => ({ ...t, id: uid(), createdAt: now() }));
-    const newAssignments: Assignment[] = (data.assignments ?? []).map(a => ({ ...a, id: uid() }));
-    const newAnnouncements: Announcement[] = (data.announcements ?? []).map(a => ({ ...a, id: uid(), createdAt: now() }));
-    update(s => ({
-      ...s,
-      topics: [...s.topics, ...newTopics],
-      assignments: [...s.assignments, ...newAssignments],
-      announcements: [...newAnnouncements, ...s.announcements],
-      grades: [
-        ...s.grades,
-        ...newAssignments.flatMap(a =>
-          s.students.map(st => ({
-            id: uid(), studentId: st.id, assignmentId: a.id, score: null, turnedIn: false,
-          }))
-        ),
-      ],
-    }));
-    return { topics: newTopics.length, assignments: newAssignments.length, announcements: newAnnouncements.length };
-  }, [update]);
+  const bulkImport = useCallback((plan: ImportPlan, mode: ImportMode): ImportResult => {
+    const result: ImportResult = {
+      topics: { created: 0, updated: 0, skipped: 0 },
+      assignments: { created: 0, updated: 0, skipped: 0 },
+      announcements: { created: 0, updated: 0, skipped: 0 },
+    };
+
+    setState(s => {
+      let topics = [...s.topics];
+      let assignments = [...s.assignments];
+      let announcements = [...s.announcements];
+      let grades = [...s.grades];
+
+      const planTopicExternalIds = new Set(plan.topics.map(t => t.externalId));
+      const planAssignmentExternalIds = new Set(plan.assignments.map(a => a.externalId));
+      const planAnnouncementExternalIds = new Set(plan.announcements.map(a => a.externalId));
+
+      // OVERWRITE: drop any prior items in this semester that came from a previous import
+      // and that are also present in this new plan (matched by externalId).
+      if (mode === "overwrite") {
+        const droppedAssignmentIds = new Set(
+          assignments
+            .filter(a => a.semesterId === plan.semesterId && a.externalId && planAssignmentExternalIds.has(a.externalId))
+            .map(a => a.id),
+        );
+        assignments = assignments.filter(a => !droppedAssignmentIds.has(a.id));
+        grades = grades.filter(g => !droppedAssignmentIds.has(g.assignmentId));
+
+        topics = topics.filter(
+          t => !(t.semesterId === plan.semesterId && t.externalId && planTopicExternalIds.has(t.externalId)),
+        );
+        announcements = announcements.filter(
+          a => !(a.semesterId === plan.semesterId && a.externalId && planAnnouncementExternalIds.has(a.externalId)),
+        );
+      }
+
+      // Upsert topics — resolve sourceKey -> topicId after the operation.
+      const topicIdBySourceKey = new Map<string, string>();
+      for (const pt of plan.topics) {
+        const existing = topics.find(
+          t => t.semesterId === plan.semesterId && t.externalId === pt.externalId,
+        );
+        if (existing) {
+          if (mode === "merge") {
+            topics = topics.map(t =>
+              t.id === existing.id ? { ...t, title: pt.title, description: pt.description } : t,
+            );
+            result.topics.updated++;
+          } else {
+            // overwrite already dropped — this branch shouldn't run; treat as skip
+            result.topics.skipped++;
+          }
+          topicIdBySourceKey.set(pt.sourceKey, existing.id);
+        } else {
+          const id = uid();
+          topics.push({
+            id, semesterId: plan.semesterId, title: pt.title, description: pt.description,
+            content: [], createdAt: now(), externalId: pt.externalId,
+          });
+          topicIdBySourceKey.set(pt.sourceKey, id);
+          result.topics.created++;
+        }
+      }
+
+      const resolveTopicId = (key?: string): string | null => {
+        if (key && topicIdBySourceKey.has(key)) return topicIdBySourceKey.get(key)!;
+        if (plan.fallbackTopicSourceKey && topicIdBySourceKey.has(plan.fallbackTopicSourceKey)) {
+          return topicIdBySourceKey.get(plan.fallbackTopicSourceKey)!;
+        }
+        return null;
+      };
+
+      // Upsert assignments
+      for (const pa of plan.assignments) {
+        const topicId = resolveTopicId(pa.topicSourceKey);
+        if (!topicId) { result.assignments.skipped++; continue; }
+        const existing = assignments.find(
+          a => a.semesterId === plan.semesterId && a.externalId === pa.externalId,
+        );
+        if (existing) {
+          if (mode === "merge") {
+            assignments = assignments.map(a =>
+              a.id === existing.id
+                ? { ...a, title: pa.title, dueDate: pa.dueDate, maxScore: pa.maxScore, topicId }
+                : a,
+            );
+            result.assignments.updated++;
+          } else {
+            result.assignments.skipped++;
+          }
+        } else {
+          const id = uid();
+          assignments.push({
+            id, topicId, semesterId: plan.semesterId,
+            title: pa.title, dueDate: pa.dueDate, maxScore: pa.maxScore,
+            externalId: pa.externalId,
+          });
+          grades.push(
+            ...s.students.map(st => ({
+              id: uid(), studentId: st.id, assignmentId: id, score: null, turnedIn: false,
+            })),
+          );
+          result.assignments.created++;
+        }
+      }
+
+      // Upsert announcements
+      for (const pn of plan.announcements) {
+        const existing = announcements.find(
+          a => a.semesterId === plan.semesterId && a.externalId === pn.externalId,
+        );
+        if (existing) {
+          if (mode === "merge") {
+            announcements = announcements.map(a =>
+              a.id === existing.id ? { ...a, title: pn.title, body: pn.body } : a,
+            );
+            result.announcements.updated++;
+          } else {
+            result.announcements.skipped++;
+          }
+        } else {
+          announcements.unshift({
+            id: uid(), semesterId: plan.semesterId, title: pn.title, body: pn.body,
+            createdAt: now(), externalId: pn.externalId,
+          });
+          result.announcements.created++;
+        }
+      }
+
+      return { ...s, topics, assignments, announcements, grades };
+    });
+
+    return result;
+  }, []);
 
   return (
     <LMSContext.Provider
