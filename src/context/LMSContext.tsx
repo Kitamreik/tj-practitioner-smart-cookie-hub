@@ -657,6 +657,7 @@ export function LMSProvider({ children }: { children: React.ReactNode }) {
         addVaultFile, deleteVaultFile,
         reorderTopics, reorderContent,
         bulkImport,
+        previewImport,
       }}
     >
       {children}
