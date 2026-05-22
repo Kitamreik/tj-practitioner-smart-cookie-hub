@@ -177,6 +177,22 @@ export interface ImportResult {
   announcements: { created: number; updated: number; skipped: number };
 }
 
+export type ItemStatus = "create" | "update" | "skip";
+export interface ImportDiffItem {
+  sourceKey: string;
+  title: string;
+  status: ItemStatus;
+  existingId?: string;
+  topicSourceKey?: string;
+  reason?: string;
+}
+export interface ImportDiff {
+  topics: ImportDiffItem[];
+  assignments: ImportDiffItem[];
+  announcements: ImportDiffItem[];
+  totals: ImportResult;
+}
+
 const uid = () => crypto.randomUUID();
 const now = () => new Date().toISOString();
 
