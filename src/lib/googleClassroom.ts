@@ -26,6 +26,10 @@ export function setClientId(id: string) {
 // Cached access token (in-memory only; not persisted).
 let cachedToken: { token: string; expiresAt: number } | null = null;
 
+export function clearCachedToken() {
+  cachedToken = null;
+}
+
 function loadGis(): Promise<void> {
   return new Promise((resolve, reject) => {
     if ((window as any).google?.accounts?.oauth2) return resolve();
@@ -40,18 +44,65 @@ function loadGis(): Promise<void> {
     s.async = true;
     s.defer = true;
     s.onload = () => resolve();
-    s.onerror = () => reject(new Error("Failed to load Google Identity Services"));
+    s.onerror = () => reject(new Error("Failed to load Google Identity Services. Check your network or ad-blocker."));
     document.head.appendChild(s);
   });
 }
 
-export async function requestAccessToken(): Promise<string> {
-  if (cachedToken && cachedToken.expiresAt > Date.now() + 30_000) return cachedToken.token;
+/**
+ * Friendly error decoder. Turns raw Google error strings into actionable guidance.
+ */
+function friendlyError(raw: string, status?: number): string {
+  const s = raw.toLowerCase();
+  if (s.includes("popup_closed") || s.includes("cancelled") || s.includes("canceled")) {
+    return "Sign-in was cancelled. Click 'Sign in with Google' again to retry.";
+  }
+  if (s.includes("popup_blocked") || s.includes("popup blocked")) {
+    return "Your browser blocked the Google sign-in popup. Allow popups for this site and try again.";
+  }
+  if (s.includes("idpiframe") || s.includes("origin")) {
+    return `This site's origin (${location.origin}) is not in the OAuth client's "Authorized JavaScript origins" list. Add it in Google Cloud Console → Credentials.`;
+  }
+  if (s.includes("invalid_client") || s.includes("client id")) {
+    return "Invalid OAuth Client ID. Double-check the value copied from Google Cloud Console (it must end in .apps.googleusercontent.com).";
+  }
+  if (s.includes("access_denied") || s.includes("not granted") || s.includes("consent")) {
+    return "You declined one of the requested Classroom scopes. Click 'Sign in' again and approve all permissions.";
+  }
+  if (status === 401) return "Your Google session expired. Re-authenticating…";
+  if (status === 403) {
+    if (s.includes("classroom api has not been used") || s.includes("disabled")) {
+      return "The Google Classroom API is not enabled on this Google Cloud project. Enable it in Cloud Console → APIs & Services → Library.";
+    }
+    return "Google refused this request (403). Make sure your account has access to the course and that all four Classroom scopes were granted.";
+  }
+  if (status === 404) return "Course or resource not found. It may have been archived or removed.";
+  if (status === 429) return "Google rate-limited the request. Waiting a moment and retrying…";
+  if (status && status >= 500) return `Google Classroom is having trouble (${status}). Retrying…`;
+  return raw.length > 240 ? raw.slice(0, 240) + "…" : raw;
+}
+
+export class ClassroomError extends Error {
+  status?: number;
+  hint: string;
+  constructor(message: string, status?: number) {
+    super(message);
+    this.status = status;
+    this.hint = friendlyError(message, status);
+  }
+}
+
+export async function requestAccessToken(forceConsent = false): Promise<string> {
+  if (!forceConsent && cachedToken && cachedToken.expiresAt > Date.now() + 30_000) return cachedToken.token;
 
   const clientId = getClientId();
-  if (!clientId) throw new Error("Google OAuth Client ID is not configured.");
+  if (!clientId) throw new ClassroomError("Google OAuth Client ID is not configured.");
 
-  await loadGis();
+  try {
+    await loadGis();
+  } catch (e: any) {
+    throw new ClassroomError(e?.message || "Failed to load Google Identity Services.");
+  }
   const google = (window as any).google;
 
   return new Promise<string>((resolve, reject) => {
@@ -60,30 +111,66 @@ export async function requestAccessToken(): Promise<string> {
         client_id: clientId,
         scope: CLASSROOM_SCOPES,
         callback: (resp: any) => {
-          if (resp.error) return reject(new Error(resp.error_description || resp.error));
-          if (!resp.access_token) return reject(new Error("No access token returned by Google."));
+          if (resp.error) return reject(new ClassroomError(resp.error_description || resp.error));
+          if (!resp.access_token) return reject(new ClassroomError("No access token returned by Google."));
           const expiresIn = Number(resp.expires_in ?? 3600) * 1000;
           cachedToken = { token: resp.access_token, expiresAt: Date.now() + expiresIn };
           resolve(resp.access_token);
         },
-        error_callback: (err: any) => reject(new Error(err?.message || "Google sign-in was cancelled.")),
+        error_callback: (err: any) => reject(new ClassroomError(err?.message || err?.type || "Google sign-in failed.")),
       });
-      client.requestAccessToken({ prompt: "" });
+      client.requestAccessToken({ prompt: forceConsent ? "consent" : "" });
     } catch (e: any) {
-      reject(new Error(e?.message || "Failed to initialize Google OAuth client."));
+      reject(new ClassroomError(e?.message || "Failed to initialize Google OAuth client."));
     }
   });
 }
 
-async function gapi<T>(path: string, token: string): Promise<T> {
-  const res = await fetch(`https://classroom.googleapis.com/v1${path}`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
-  if (!res.ok) {
-    const text = await res.text();
-    throw new Error(`Google Classroom API error (${res.status}): ${text.slice(0, 200)}`);
+const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
+
+/**
+ * Fetch wrapper with:
+ *  - automatic single retry on 401 by re-requesting the access token
+ *  - exponential backoff (3 tries) on 429 / 5xx
+ *  - rich ClassroomError on failure
+ */
+async function gapi<T>(path: string, tokenRef: { token: string }): Promise<T> {
+  let lastErr: ClassroomError | null = null;
+  for (let attempt = 0; attempt < 3; attempt++) {
+    let res: Response;
+    try {
+      res = await fetch(`https://classroom.googleapis.com/v1${path}`, {
+        headers: { Authorization: `Bearer ${tokenRef.token}` },
+      });
+    } catch (networkErr: any) {
+      lastErr = new ClassroomError(networkErr?.message || "Network error contacting Google Classroom.");
+      await sleep(400 * Math.pow(2, attempt));
+      continue;
+    }
+
+    if (res.ok) return res.json() as Promise<T>;
+
+    const text = await res.text().catch(() => "");
+    // 401 — token expired or revoked. Refresh once, then retry.
+    if (res.status === 401 && attempt === 0) {
+      clearCachedToken();
+      try {
+        tokenRef.token = await requestAccessToken();
+        continue;
+      } catch (e: any) {
+        throw new ClassroomError(e?.message || "Re-authentication failed.", 401);
+      }
+    }
+    // 429 / 5xx — back off and retry.
+    if (res.status === 429 || res.status >= 500) {
+      lastErr = new ClassroomError(text || res.statusText, res.status);
+      await sleep(500 * Math.pow(2, attempt));
+      continue;
+    }
+    // Other 4xx — non-retryable.
+    throw new ClassroomError(text || res.statusText, res.status);
   }
-  return res.json();
+  throw lastErr ?? new ClassroomError("Google Classroom request failed after retries.");
 }
 
 export interface GCourse { id: string; name: string; section?: string; descriptionHeading?: string; description?: string; }
@@ -97,23 +184,23 @@ export interface GAnnouncement { id: string; courseId: string; text: string; cre
 export interface GTopic { topicId: string; courseId: string; name: string; }
 
 export async function listCourses(token: string): Promise<GCourse[]> {
-  const data = await gapi<{ courses?: GCourse[] }>("/courses?courseStates=ACTIVE&pageSize=100", token);
+  const data = await gapi<{ courses?: GCourse[] }>("/courses?courseStates=ACTIVE&pageSize=100", { token });
   return data.courses ?? [];
 }
 export async function listCourseWork(token: string, courseId: string): Promise<GCourseWork[]> {
   const data = await gapi<{ courseWork?: GCourseWork[] }>(
-    `/courses/${courseId}/courseWork?pageSize=100`, token,
+    `/courses/${courseId}/courseWork?pageSize=100`, { token },
   );
   return data.courseWork ?? [];
 }
 export async function listAnnouncements(token: string, courseId: string): Promise<GAnnouncement[]> {
   const data = await gapi<{ announcements?: GAnnouncement[] }>(
-    `/courses/${courseId}/announcements?pageSize=100`, token,
+    `/courses/${courseId}/announcements?pageSize=100`, { token },
   );
   return data.announcements ?? [];
 }
 export async function listTopics(token: string, courseId: string): Promise<GTopic[]> {
-  const data = await gapi<{ topic?: GTopic[] }>(`/courses/${courseId}/topics?pageSize=100`, token);
+  const data = await gapi<{ topic?: GTopic[] }>(`/courses/${courseId}/topics?pageSize=100`, { token });
   return data.topic ?? [];
 }
 
