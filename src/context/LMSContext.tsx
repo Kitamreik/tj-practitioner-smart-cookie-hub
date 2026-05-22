@@ -139,6 +139,7 @@ interface LMSContextType extends LMSState {
   reorderTopics: (semesterId: string, fromIndex: number, toIndex: number) => void;
   reorderContent: (topicId: string, fromIndex: number, toIndex: number) => void;
   bulkImport: (plan: ImportPlan, mode: ImportMode) => ImportResult;
+  previewImport: (plan: ImportPlan, mode: ImportMode) => ImportDiff;
 }
 
 export type ImportMode = "merge" | "overwrite";
