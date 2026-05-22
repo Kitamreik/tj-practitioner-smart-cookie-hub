@@ -644,6 +644,88 @@ export function LMSProvider({ children }: { children: React.ReactNode }) {
     return result;
   }, []);
 
+  /**
+   * Pure simulation of bulkImport against current state — returns per-item statuses
+   * for the given mode without mutating anything. Used to show the diff preview.
+   */
+  const previewImport = useCallback((plan: ImportPlan, mode: ImportMode): ImportDiff => {
+    const diff: ImportDiff = {
+      topics: [],
+      assignments: [],
+      announcements: [],
+      totals: {
+        topics: { created: 0, updated: 0, skipped: 0 },
+        assignments: { created: 0, updated: 0, skipped: 0 },
+        announcements: { created: 0, updated: 0, skipped: 0 },
+      },
+    };
+
+    // Track which topic sourceKeys will exist after the import — needed to resolve
+    // assignment.topicSourceKey for the create branch.
+    const topicSourceKeysAfter = new Set<string>();
+
+    for (const pt of plan.topics) {
+      const existing = state.topics.find(
+        t => t.semesterId === plan.semesterId && t.externalId === pt.externalId,
+      );
+      // Overwrite drops then re-creates matching items, so the "existing" record
+      // is gone — treat as a fresh create.
+      if (existing && mode === "merge") {
+        diff.topics.push({ sourceKey: pt.sourceKey, title: pt.title, status: "update", existingId: existing.id });
+        diff.totals.topics.updated++;
+      } else {
+        diff.topics.push({ sourceKey: pt.sourceKey, title: pt.title, status: "create" });
+        diff.totals.topics.created++;
+      }
+      topicSourceKeysAfter.add(pt.sourceKey);
+    }
+
+    const fallbackOk = plan.fallbackTopicSourceKey && topicSourceKeysAfter.has(plan.fallbackTopicSourceKey);
+
+    for (const pa of plan.assignments) {
+      const hasTopic = (pa.topicSourceKey && topicSourceKeysAfter.has(pa.topicSourceKey)) || fallbackOk;
+      if (!hasTopic) {
+        diff.assignments.push({
+          sourceKey: pa.sourceKey, title: pa.title, status: "skip",
+          topicSourceKey: pa.topicSourceKey, reason: "No matching topic in plan",
+        });
+        diff.totals.assignments.skipped++;
+        continue;
+      }
+      const existing = state.assignments.find(
+        a => a.semesterId === plan.semesterId && a.externalId === pa.externalId,
+      );
+      if (existing && mode === "merge") {
+        diff.assignments.push({
+          sourceKey: pa.sourceKey, title: pa.title, status: "update",
+          existingId: existing.id, topicSourceKey: pa.topicSourceKey,
+        });
+        diff.totals.assignments.updated++;
+      } else {
+        diff.assignments.push({
+          sourceKey: pa.sourceKey, title: pa.title, status: "create",
+          topicSourceKey: pa.topicSourceKey,
+        });
+        diff.totals.assignments.created++;
+      }
+    }
+
+    for (const pn of plan.announcements) {
+      const existing = state.announcements.find(
+        a => a.semesterId === plan.semesterId && a.externalId === pn.externalId,
+      );
+      if (existing && mode === "merge") {
+        diff.announcements.push({ sourceKey: pn.sourceKey, title: pn.title, status: "update", existingId: existing.id });
+        diff.totals.announcements.updated++;
+      } else {
+        diff.announcements.push({ sourceKey: pn.sourceKey, title: pn.title, status: "create" });
+        diff.totals.announcements.created++;
+      }
+    }
+
+    return diff;
+  }, [state.topics, state.assignments, state.announcements]);
+
   return (
     <LMSContext.Provider
       value={{
